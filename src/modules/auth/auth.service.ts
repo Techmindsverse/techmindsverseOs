@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { SupabaseService } from '../supabase/supabase.service';
 import * as bcrypt from 'bcrypt';
@@ -16,9 +11,6 @@ export class AuthService {
     private supabaseService: SupabaseService,
   ) {}
 
-  // =========================
-  // LOGIN
-  // =========================
   async login(email: string, password: string) {
     const { data: user, error } = await this.supabaseService.db
       .from('users')
@@ -31,27 +23,15 @@ export class AuthService {
     }
 
     if (user.status !== 'active') {
-      throw new UnauthorizedException(
-        'Account is not active. Please activate your account.',
-      );
-    }
-
-    if (!user.password_hash) {
-      throw new UnauthorizedException('Account not activated yet');
+      throw new UnauthorizedException('Account is not active. Please check your email to activate your account.');
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
-
     if (!passwordMatch) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    };
-
+    const payload = { sub: user.id, email: user.email, role: user.role };
     const token = this.jwtService.sign(payload);
 
     return {
@@ -65,14 +45,24 @@ export class AuthService {
     };
   }
 
-  // =========================
-  // OPTIONAL TOKEN CHECK (UI ONLY)
-  // =========================
+  async getMe(userId: string) {
+    const { data, error } = await this.supabaseService.db
+      .from('users')
+      .select('id, email, role, status')
+      .eq('id', userId)
+      .single();
+
+    if (error || !data) throw new NotFoundException('User not found');
+    return data;
+  }
+
   async validateActivationToken(token: string) {
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
     const { data, error } = await this.supabaseService.db
       .from('users')
       .select('id, email, status, activation_token_expires_at')
-      .eq('activation_token', token)
+      .eq('activation_token', hashedToken)
       .single();
 
     if (error || !data) {
@@ -85,7 +75,6 @@ export class AuthService {
 
     const now = new Date();
     const expiry = new Date(data.activation_token_expires_at);
-
     if (now > expiry) {
       throw new BadRequestException('Activation token has expired');
     }
@@ -96,33 +85,27 @@ export class AuthService {
     };
   }
 
-  // =========================
-  // ACTIVATION (HARDENED - SINGLE SOURCE OF TRUTH)
-  // =========================
   async activateAccount(token: string, password: string) {
-    const { data: user, error } = await this.supabaseService.db
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const { data, error } = await this.supabaseService.db
       .from('users')
       .select('*')
-      .eq('activation_token', token)
+      .eq('activation_token', hashedToken)
       .single();
 
-    if (error || !user) {
+    if (error || !data) {
       throw new NotFoundException('Invalid activation token');
     }
 
-    if (user.status === 'active') {
+    if (data.status === 'active') {
       throw new BadRequestException('Account already activated');
     }
 
     const now = new Date();
-    const expiry = new Date(user.activation_token_expires_at);
-
+    const expiry = new Date(data.activation_token_expires_at);
     if (now > expiry) {
       throw new BadRequestException('Activation token has expired');
-    }
-
-    if (!password || password.length < 6) {
-      throw new BadRequestException('Password must be at least 6 characters');
     }
 
     const password_hash = await bcrypt.hash(password, 12);
@@ -134,28 +117,21 @@ export class AuthService {
         status: 'active',
         activation_token: null,
         activation_token_expires_at: null,
-        activated_at: new Date(),
       })
-      .eq('id', user.id);
+      .eq('id', data.id);
 
     if (updateError) {
       throw new BadRequestException('Failed to activate account');
     }
 
-    return {
-      message: 'Account activated successfully. You can now log in.',
-    };
+    return { message: 'Account activated successfully. You can now log in.' };
   }
 
-  // =========================
-  // TOKEN GENERATION
-  // =========================
-  generateActivationToken(): { token: string; expiresAt: Date } {
-    const token = crypto.randomBytes(32).toString('hex');
-
+  generateActivationToken(): { rawToken: string; hashedToken: string; expiresAt: Date } {
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 48);
-
-    return { token, expiresAt };
+    return { rawToken, hashedToken, expiresAt };
   }
 }

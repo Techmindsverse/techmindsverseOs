@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Body, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { AdminNoteDto } from './dto/admin-note.dto';
@@ -16,8 +16,8 @@ export class AdminController {
 
   @Get('payments')
   @ApiOperation({ summary: 'Get all payments' })
-  getAllPayments() {
-    return this.adminService.getAllPayments();
+  getAllPayments(@Query('page') page = 1, @Query('limit') limit = 20) {
+    return this.adminService.getAllPayments(+page, +limit);
   }
 
   @Patch('payments/:id/approve')
@@ -34,31 +34,31 @@ export class AdminController {
 
   @Get('students')
   @ApiOperation({ summary: 'Get all students' })
-  getAllStudents() {
-    return this.adminService.getAllStudents();
+  getAllStudents(@Query('page') page = 1, @Query('limit') limit = 20) {
+    return this.adminService.getAllStudents(+page, +limit);
   }
 
   @Get('projects')
   @ApiOperation({ summary: 'Get all projects' })
-  getAllProjects() {
-    return this.adminService.getAllProjects();
+  getAllProjects(@Query('page') page = 1, @Query('limit') limit = 20) {
+    return this.adminService.getAllProjects(+page, +limit);
   }
 
   @Get('complaints')
   @ApiOperation({ summary: 'Get all complaints' })
-  getAllComplaints() {
-    return this.adminService.getAllComplaints();
+  getAllComplaints(@Query('page') page = 1, @Query('limit') limit = 20) {
+    return this.adminService.getAllComplaints(+page, +limit);
   }
 
   @Get('contacts')
   @ApiOperation({ summary: 'Get all contacts' })
-  getAllContacts() {
-    return this.adminService.getAllContacts();
+  getAllContacts(@Query('page') page = 1, @Query('limit') limit = 20) {
+    return this.adminService.getAllContacts(+page, +limit);
   }
 
   @Get('builds')
-@ApiOperation({ summary: 'Get all build requests' })
-getAllBuilds() {
-  return this.adminService.getAllBuilds();
-}
+  @ApiOperation({ summary: 'Get all build requests' })
+  getAllBuilds(@Query('page') page = 1, @Query('limit') limit = 20) {
+    return this.adminService.getAllBuilds(+page, +limit);
+  }
 }

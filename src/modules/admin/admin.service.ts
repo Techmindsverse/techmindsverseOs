@@ -12,14 +12,16 @@ export class AdminService {
     private authService: AuthService,
   ) {}
 
-  async getAllPayments() {
-    const { data, error } = await this.supabaseService.db
+  async getAllPayments(page = 1, limit = 20) {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    const { data, error, count } = await this.supabaseService.db
       .from('payments')
-      .select('*, users(email), courses(title)')
-      .order('created_at', { ascending: false });
-
+      .select('*, users(email), courses(title)', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
     if (error) throw new NotFoundException('Failed to fetch payments');
-    return data;
+    return { data, total: count, page, limit };
   }
 
   async approvePayment(paymentId: string, dto: AdminNoteDto) {
@@ -31,27 +33,23 @@ export class AdminService {
 
     if (error || !payment) throw new NotFoundException('Payment not found');
 
-    // Update payment status
     await this.supabaseService.db
       .from('payments')
       .update({ status: 'approved', admin_note: dto.admin_note ?? null })
       .eq('id', paymentId);
 
-    // Generate activation token
-    const { token, expiresAt } = this.authService.generateActivationToken();
+    const { rawToken, hashedToken, expiresAt } = this.authService.generateActivationToken();
 
-    // Update user with token
     await this.supabaseService.db
       .from('users')
       .update({
-        activation_token: token,
+        activation_token: hashedToken,
         activation_token_expires_at: expiresAt,
         status: 'pending',
       })
       .eq('id', payment.user_id);
 
-    // Send activation email
-    await this.mailService.sendActivationEmail(payment.users.email, token);
+    await this.mailService.sendActivationEmail(payment.users.email, rawToken);
 
     return { message: 'Payment approved. Activation email sent.' };
   }
@@ -61,55 +59,67 @@ export class AdminService {
       .from('payments')
       .update({ status: 'rejected', admin_note: dto.admin_note ?? null })
       .eq('id', paymentId);
-
     if (error) throw new BadRequestException('Failed to reject payment');
     return { message: 'Payment rejected.' };
   }
 
-  async getAllStudents() {
-    const { data, error } = await this.supabaseService.db
+  async getAllStudents(page = 1, limit = 20) {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    const { data, error, count } = await this.supabaseService.db
       .from('students')
-      .select('*, users(email, status)')
-      .order('created_at', { ascending: false });
-
+      .select('*, users(email, status)', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
     if (error) throw new NotFoundException('Failed to fetch students');
-    return data;
+    return { data, total: count, page, limit };
   }
 
-  async getAllProjects() {
-    const { data, error } = await this.supabaseService.db
+  async getAllProjects(page = 1, limit = 20) {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    const { data, error, count } = await this.supabaseService.db
       .from('projects')
-      .select('*, students(full_name)')
-      .order('created_at', { ascending: false });
-
+      .select('*, students(full_name)', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
     if (error) throw new NotFoundException('Failed to fetch projects');
-    return data;
+    return { data, total: count, page, limit };
   }
 
-  async getAllComplaints() {
-    const { data, error } = await this.supabaseService.db
+  async getAllComplaints(page = 1, limit = 20) {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    const { data, error, count } = await this.supabaseService.db
       .from('complaints')
-      .select('*, users(email)')
-      .order('created_at', { ascending: false });
-
+      .select('*, users(email)', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
     if (error) throw new NotFoundException('Failed to fetch complaints');
-    return data;
+    return { data, total: count, page, limit };
   }
 
-  async getAllContacts() {
-    const { data, error } = await this.supabaseService.db
+  async getAllContacts(page = 1, limit = 20) {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    const { data, error, count } = await this.supabaseService.db
       .from('contacts')
-      .select('*')
-      .order('created_at', { ascending: false });
-
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
     if (error) throw new NotFoundException('Failed to fetch contacts');
-    return data;
+    return { data, total: count, page, limit };
   }
 
-  async getAllBuilds() {
-  const { data, error } = await this.supabaseService.db
-    .from('builds').select('*').order('created_at', { ascending: false });
-  if (error) throw new NotFoundException('Failed to fetch builds');
-  return data;
-}
+  async getAllBuilds(page = 1, limit = 20) {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    const { data, error, count } = await this.supabaseService.db
+      .from('builds')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
+    if (error) throw new NotFoundException('Failed to fetch builds');
+    return { data, total: count, page, limit };
+  }
 }
