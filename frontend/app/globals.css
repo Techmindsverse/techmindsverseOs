@@ -1,0 +1,164 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-blue: #1A3BDB;
+  --brand-purple: #6D28D9;
+  --brand-light: #ffffff;
+  --brand-soft: #f8f9ff;
+  --brand-border: #e6e8f0;
+  --text-dark: #0a0a0a;
+  --text-muted: #6b7280;
+
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-anticipate: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--brand-light);
+  color: var(--text-dark);
+  overflow-x: hidden;
+
+  /* soft premium gradient */
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(26,59,219,0.08), transparent 35%),
+    radial-gradient(circle at 80% 80%, rgba(109,40,217,0.08), transparent 40%);
+}
+
+/* =========================
+   TYPOGRAPHY
+========================= */
+
+.font-bebas {
+  font-family: 'Bebas Neue', sans-serif;
+}
+
+/* =========================
+   SCROLLBAR
+========================= */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #ffffff;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #1A3BDB, #6D28D9);
+  border-radius: 10px;
+}
+
+/* =========================
+   LOGO SYSTEM (IMPORTANT)
+========================= */
+
+.logo-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.4s var(--ease-smooth);
+}
+
+.logo-wrapper:hover {
+  transform: scale(1.08);
+}
+
+/* glowing aura behind logo */
+.logo-wrapper::before {
+  content: "";
+  position: absolute;
+  width: 140%;
+  height: 140%;
+  background: radial-gradient(circle,
+    rgba(26,59,219,0.25),
+    rgba(109,40,217,0.2),
+    transparent 70%
+  );
+  filter: blur(25px);
+  opacity: 0.6;
+  z-index: -1;
+  transition: opacity 0.4s ease;
+}
+
+.logo-wrapper:hover::before {
+  opacity: 1;
+}
+
+/* subtle float */
+@keyframes logoFloat {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0px); }
+}
+
+.logo-float {
+  animation: logoFloat 6s ease-in-out infinite;
+}
+
+/* =========================
+   BUTTON / GLOW SYSTEM
+========================= */
+
+.glow-brand {
+  box-shadow:
+    0 10px 25px rgba(26, 59, 219, 0.15),
+    0 0 40px rgba(109, 40, 217, 0.1);
+}
+
+/* =========================
+   CARD SYSTEM (LIGHT MODE)
+========================= */
+
+.card-hover {
+  background: #ffffff;
+  border: 1px solid var(--brand-border);
+  transition: all 0.35s var(--ease-smooth);
+}
+
+.card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 50px rgba(26, 59, 219, 0.12);
+  border-color: rgba(26, 59, 219, 0.3);
+}
+
+/* =========================
+   SHIMMER (UPDATED FOR LIGHT)
+========================= */
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    #1A3BDB 0%,
+    #6D28D9 25%,
+    #1A3BDB 50%,
+    #6D28D9 75%,
+    #1A3BDB 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 4s linear infinite;
+}
