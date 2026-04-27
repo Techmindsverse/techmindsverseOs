@@ -48,7 +48,7 @@ export default function AboutPage() {
               Phase 1 is about building the foundation — a stable backend, a clean frontend, and real products that work. Phase 2 introduces intelligence. Phase 3 scales into separate product ecosystems. One backend. Multiple frontiers.
             </p>
             <Link href="/build" className="inline-flex items-center gap-2 text-brand-blue hover:gap-3 transition-all text-sm">
-              Start Building With Us <ArrowRight size={14} />
+              Start Building With Us Today <ArrowRight size={14} />
             </Link>
           </div>
         </div>
