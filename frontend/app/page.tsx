@@ -1,5 +1,5 @@
 'use client';
-
+import { Analytics } from "@vercel/analytics/next"
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion, useScroll, useTransform } from 'framer-motion';
@@ -256,6 +256,7 @@ export default function HomePage() {
           ))}
 
         </div>
+        <Analytics />
       </section>
 
     </PublicLayout>
