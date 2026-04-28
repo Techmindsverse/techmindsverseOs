@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import PublicLayout from '@/app/components/layout/PublicLayout';
-import api from '@/app/lib/store/api';
+import api from '@/app/lib/api';
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });

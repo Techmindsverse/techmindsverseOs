@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import api from '@/app/lib/store/api';
+import api from '@/app/lib/api';
 import { useAuthStore } from '@/app/lib/store/auth.store';
 
 export default function LoginPage() {

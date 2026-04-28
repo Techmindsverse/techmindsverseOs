@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import PublicLayout from '@/app/components/layout/PublicLayout';
-import api from '@/app/lib/store/api';
+import api from '@/app/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const categories = ['App', 'Website', 'Fintech', 'E-commerce', 'Automation', 'Branding', 'Other'];
