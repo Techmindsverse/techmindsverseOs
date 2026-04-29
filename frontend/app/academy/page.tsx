@@ -150,12 +150,13 @@ export default function AcademyPage() {
                   </p>
 
                   {/* FIXED CTA */}
-                <Link
-               href="/activate"
-              className="flex items-center gap-2 text-brand-blue text-sm group-hover:gap-3 transition-all"
->
-          Activate Account <ArrowRight size={14} />
-</Link>
+                  <Link
+                    href={`/academy/enroll?course=${encodeURIComponent(course.title)}`}
+                    className="flex items-center gap-2 text-brand-blue text-sm group-hover:gap-3 transition-all"
+                  >
+                    Enroll Now <ArrowRight size={14} />
+                  </Link>
+
                 </div>
               </div>
             ))}
