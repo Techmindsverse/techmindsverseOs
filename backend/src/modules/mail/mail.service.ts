@@ -8,20 +8,28 @@ export class MailService {
   private readonly logger = new Logger(MailService.name);
 
   constructor(private readonly configService: ConfigService) {
+    const port = this.configService.get<number>('MAIL_PORT');
+
     this.transporter = nodemailer.createTransport({
       host: this.configService.get<string>('MAIL_HOST'),
-      port: this.configService.get<number>('MAIL_PORT'),
-      secure: false, // true only for 465
+      port,
+      secure: port === 465,
       auth: {
         user: this.configService.get<string>('MAIL_USER'),
         pass: this.configService.get<string>('MAIL_PASS'),
       },
     });
+
+    // 🔥 VERIFY SMTP CONNECTION
+    this.transporter.verify((error) => {
+      if (error) {
+        this.logger.error('SMTP connection failed', error);
+      } else {
+        this.logger.log('SMTP server is ready');
+      }
+    });
   }
 
-  // -----------------------------
-  // ACTIVATE ACCOUNT EMAIL
-  // -----------------------------
   async sendActivationEmail(email: string, token: string): Promise<void> {
     try {
       const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
@@ -51,12 +59,10 @@ export class MailService {
       this.logger.log(`Activation email sent to ${email}`);
     } catch (err) {
       this.logger.error('Failed to send activation email', err);
+      throw err; // 🔥 important
     }
   }
 
-  // -----------------------------
-  // CONTACT EMAIL (ADMIN ALERT)
-  // -----------------------------
   async sendContactEmail(data: {
     name: string;
     email: string;
@@ -66,7 +72,8 @@ export class MailService {
     try {
       await this.transporter.sendMail({
         from: `"TechMindsVerse Contact" <${this.configService.get('MAIL_USER')}>`,
-        to: this.configService.get('MAIL_USER'), // ADMIN EMAIL
+        to: this.configService.get('MAIL_USER'),
+        replyTo: data.email, // 🔥 important
         subject: `New Contact Message: ${data.subject}`,
         html: `
           <div style="font-family: Arial, sans-serif;">
@@ -86,6 +93,7 @@ export class MailService {
       this.logger.log(`Contact email sent from ${data.email}`);
     } catch (err) {
       this.logger.error('Failed to send contact email', err);
+      throw err;
     }
   }
 }

@@ -1,16 +1,20 @@
-import { Controller, Post, Body } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Patch, Body, Param } from '@nestjs/common';
 import { BuildService } from './build.service';
-import { CreateBuildDto } from './dto/create-build.dto';
-
-@ApiTags('Build')
+import { UpdateBuildStatusDto } from './dto/update-build-status.dto';
+import { BuildStatus } from './types/build-status.type';
 @Controller('build')
 export class BuildController {
   constructor(private readonly buildService: BuildService) {}
 
-  @Post()
-  @ApiOperation({ summary: 'Submit a build request' })
-  submit(@Body() dto: CreateBuildDto) {
-    return this.buildService.submit(dto);
+  @Patch(':id/status')
+  updateStatus(
+    @Param('id') id: string,
+    @Body() body: UpdateBuildStatusDto,
+  ) {
+    return this.buildService.updateStatus(
+      id,
+      body.status as BuildStatus,
+      body.admin_note,
+    );
   }
 }
