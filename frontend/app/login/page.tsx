@@ -1,17 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/app/lib/api';
 import { useAuthStore } from '@/app/lib/store/auth.store';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { setAuth } = useAuthStore();
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const resetSuccess = searchParams.get('reset') === 'true';
+  const activatedSuccess = searchParams.get('activated') === 'true';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +50,14 @@ export default function LoginPage() {
           <h1 className="font-bebas text-4xl text-white">WELCOME BACK</h1>
           <p className="text-white/40 text-sm mt-2">Sign in to your account</p>
         </div>
+
+        {(resetSuccess || activatedSuccess) && (
+          <div className="border border-green-500/30 bg-green-500/10 text-green-400 p-4 rounded text-sm text-center mb-6">
+            {resetSuccess
+              ? 'Password reset successfully. You can now log in.'
+              : 'Account activated. You can now log in.'}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
@@ -82,9 +94,15 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-white/30 text-sm mt-8">
+        <p className="text-center text-white/30 text-sm mt-4">
+          <Link href="/forgot-password" className="text-brand-blue hover:underline">
+            Forgot password?
+          </Link>
+        </p>
+
+        <p className="text-center text-white/30 text-sm mt-4">
           No account?{' '}
-          <Link href="/academy" className="text-brand-blue hover:underline">
+          <Link href="/enroll" className="text-brand-blue hover:underline">
             Enroll in Academy
           </Link>
         </p>

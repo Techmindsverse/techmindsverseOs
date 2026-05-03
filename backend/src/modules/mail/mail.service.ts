@@ -20,7 +20,6 @@ export class MailService {
       },
     });
 
-    // 🔥 VERIFY SMTP CONNECTION
     this.transporter.verify((error) => {
       if (error) {
         this.logger.error('SMTP connection failed', error);
@@ -43,15 +42,11 @@ export class MailService {
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #1A3BDB;">Welcome to TechMindsVerse</h2>
             <p>Your account has been approved. Click below to activate your account.</p>
-
-            <a href="${activationLink}" 
+            <a href="${activationLink}"
               style="display:inline-block;padding:12px 24px;background:#1A3BDB;color:#fff;text-decoration:none;border-radius:6px;margin-top:20px;">
               Activate Account
             </a>
-
-            <p style="color:#666;margin-top:20px;">
-              This link expires in 48 hours.
-            </p>
+            <p style="color:#666;margin-top:20px;">This link expires in 48 hours.</p>
           </div>
         `,
       });
@@ -59,7 +54,7 @@ export class MailService {
       this.logger.log(`Activation email sent to ${email}`);
     } catch (err) {
       this.logger.error('Failed to send activation email', err);
-      throw err; // 🔥 important
+      throw err;
     }
   }
 
@@ -73,18 +68,15 @@ export class MailService {
       await this.transporter.sendMail({
         from: `"TechMindsVerse Contact" <${this.configService.get('MAIL_USER')}>`,
         to: this.configService.get('MAIL_USER'),
-        replyTo: data.email, // 🔥 important
+        replyTo: data.email,
         subject: `New Contact Message: ${data.subject}`,
         html: `
           <div style="font-family: Arial, sans-serif;">
             <h2 style="color:#1A3BDB;">New Contact Submission</h2>
-
             <p><b>Name:</b> ${data.name}</p>
             <p><b>Email:</b> ${data.email}</p>
             <p><b>Subject:</b> ${data.subject}</p>
-
             <hr />
-
             <p style="white-space: pre-line;">${data.message}</p>
           </div>
         `,
@@ -93,6 +85,36 @@ export class MailService {
       this.logger.log(`Contact email sent from ${data.email}`);
     } catch (err) {
       this.logger.error('Failed to send contact email', err);
+      throw err;
+    }
+  }
+
+  async sendPasswordResetEmail(email: string, token: string): Promise<void> {
+    try {
+      const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
+      const resetLink = `${frontendUrl}/reset-password?token=${token}`;
+
+      await this.transporter.sendMail({
+        from: `"TechMindsVerse" <${this.configService.get('MAIL_USER')}>`,
+        to: email,
+        subject: 'Reset Your TechMindsVerse Password',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #1A3BDB;">Reset Your Password</h2>
+            <p>You requested a password reset. Click below to set a new password.</p>
+            <a href="${resetLink}"
+              style="display:inline-block;padding:12px 24px;background:#1A3BDB;color:#fff;text-decoration:none;border-radius:6px;margin-top:20px;">
+              Reset Password
+            </a>
+            <p style="color:#666;margin-top:20px;">This link expires in 1 hour.</p>
+            <p style="color:#666;">If you did not request this, ignore this email.</p>
+          </div>
+        `,
+      });
+
+      this.logger.log(`Password reset email sent to ${email}`);
+    } catch (err) {
+      this.logger.error('Failed to send password reset email', err);
       throw err;
     }
   }
