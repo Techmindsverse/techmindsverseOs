@@ -1,59 +1,48 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 @Injectable()
 export class MailService {
-  private transporter: nodemailer.Transporter;
+  private readonly resend: Resend;
   private readonly logger = new Logger(MailService.name);
 
   constructor(private readonly configService: ConfigService) {
-    const port = this.configService.get<number>('MAIL_PORT');
+    const apiKey = this.configService.get<string>('RESEND_API_KEY');
 
-    this.transporter = nodemailer.createTransport({
-      host: this.configService.get<string>('MAIL_HOST'),
-      port,
-      secure: port === 465,
-      auth: {
-        user: this.configService.get<string>('MAIL_USER'),
-        pass: this.configService.get<string>('MAIL_PASS'),
-      },
-    });
+    if (!apiKey) {
+      throw new Error('RESEND_API_KEY is not set');
+    }
 
-    this.transporter.verify((error) => {
-      if (error) {
-        this.logger.error('SMTP connection failed', error);
-      } else {
-        this.logger.log('SMTP server is ready');
-      }
-    });
+    this.resend = new Resend(apiKey);
   }
 
-  async sendActivationEmail(email: string, token: string): Promise<void> {
+  private getFrom() {
+    return this.configService.get<string>('MAIL_FROM')!;
+  }
+
+  async sendActivationEmail(email: string, token: string) {
     try {
       const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
-      const activationLink = `${frontendUrl}/activate?token=${token}`;
+      const link = `${frontendUrl}/activate?token=${token}`;
 
-      await this.transporter.sendMail({
-        from: `"TechMindsVerse" <${this.configService.get('MAIL_USER')}>`,
+      await this.resend.emails.send({
+        from: this.getFrom(),
         to: email,
         subject: 'Activate Your TechMindsVerse Account',
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #1A3BDB;">Welcome to TechMindsVerse</h2>
-            <p>Your account has been approved. Click below to activate your account.</p>
-            <a href="${activationLink}"
-              style="display:inline-block;padding:12px 24px;background:#1A3BDB;color:#fff;text-decoration:none;border-radius:6px;margin-top:20px;">
-              Activate Account
-            </a>
-            <p style="color:#666;margin-top:20px;">This link expires in 48 hours.</p>
-          </div>
+          <h2>Welcome to TechMindsVerse</h2>
+          <p>Your account has been approved.</p>
+          <a href="${link}" style="padding:10px 20px;background:#1A3BDB;color:#fff;text-decoration:none;border-radius:5px;">
+            Activate Account
+          </a>
+          <p>This link expires in 48 hours.</p>
         `,
       });
 
       this.logger.log(`Activation email sent to ${email}`);
     } catch (err) {
-      this.logger.error('Failed to send activation email', err);
+      this.logger.error('Activation email failed', err);
       throw err;
     }
   }
@@ -63,58 +52,52 @@ export class MailService {
     email: string;
     subject: string;
     message: string;
-  }): Promise<void> {
+  }) {
     try {
-      await this.transporter.sendMail({
-        from: `"TechMindsVerse Contact" <${this.configService.get('MAIL_USER')}>`,
-        to: this.configService.get('MAIL_USER'),
+      await this.resend.emails.send({
+        from: this.getFrom(),
+        to: this.getFrom(),
         replyTo: data.email,
-        subject: `New Contact Message: ${data.subject}`,
+        subject: `New Contact: ${data.subject}`,
         html: `
-          <div style="font-family: Arial, sans-serif;">
-            <h2 style="color:#1A3BDB;">New Contact Submission</h2>
-            <p><b>Name:</b> ${data.name}</p>
-            <p><b>Email:</b> ${data.email}</p>
-            <p><b>Subject:</b> ${data.subject}</p>
-            <hr />
-            <p style="white-space: pre-line;">${data.message}</p>
-          </div>
+          <h2>New Contact Message</h2>
+          <p><b>Name:</b> ${data.name}</p>
+          <p><b>Email:</b> ${data.email}</p>
+          <p><b>Subject:</b> ${data.subject}</p>
+          <hr/>
+          <p>${data.message}</p>
         `,
       });
 
-      this.logger.log(`Contact email sent from ${data.email}`);
+      this.logger.log(`Contact email from ${data.email}`);
     } catch (err) {
-      this.logger.error('Failed to send contact email', err);
+      this.logger.error('Contact email failed', err);
       throw err;
     }
   }
 
-  async sendPasswordResetEmail(email: string, token: string): Promise<void> {
+  async sendPasswordResetEmail(email: string, token: string) {
     try {
       const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
-      const resetLink = `${frontendUrl}/reset-password?token=${token}`;
+      const link = `${frontendUrl}/reset-password?token=${token}`;
 
-      await this.transporter.sendMail({
-        from: `"TechMindsVerse" <${this.configService.get('MAIL_USER')}>`,
+      await this.resend.emails.send({
+        from: this.getFrom(),
         to: email,
-        subject: 'Reset Your TechMindsVerse Password',
+        subject: 'Reset Your Password',
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #1A3BDB;">Reset Your Password</h2>
-            <p>You requested a password reset. Click below to set a new password.</p>
-            <a href="${resetLink}"
-              style="display:inline-block;padding:12px 24px;background:#1A3BDB;color:#fff;text-decoration:none;border-radius:6px;margin-top:20px;">
-              Reset Password
-            </a>
-            <p style="color:#666;margin-top:20px;">This link expires in 1 hour.</p>
-            <p style="color:#666;">If you did not request this, ignore this email.</p>
-          </div>
+          <h2>Password Reset</h2>
+          <p>Click below to reset your password:</p>
+          <a href="${link}" style="padding:10px 20px;background:#1A3BDB;color:#fff;text-decoration:none;border-radius:5px;">
+            Reset Password
+          </a>
+          <p>This link expires in 1 hour.</p>
         `,
       });
 
       this.logger.log(`Password reset email sent to ${email}`);
     } catch (err) {
-      this.logger.error('Failed to send password reset email', err);
+      this.logger.error('Password reset failed', err);
       throw err;
     }
   }
