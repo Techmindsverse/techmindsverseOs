@@ -48,7 +48,7 @@ export default function BuildPage() {
 
   const progress = Math.round((step / TOTAL_STEPS) * 100);
 
- const handleSubmit = async () => {
+  const handleSubmit = async () => {
   if (!form.name || !form.email || !form.description || !form.category) {
     setError('Please fill all required fields.');
     return;
@@ -76,7 +76,6 @@ export default function BuildPage() {
     setLoading(false);
   }
 };
-
   return (
     <PublicLayout>
       <section className="min-h-screen py-32 px-6">
