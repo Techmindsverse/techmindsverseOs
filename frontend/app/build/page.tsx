@@ -48,22 +48,34 @@ export default function BuildPage() {
 
   const progress = Math.round((step / TOTAL_STEPS) * 100);
 
-  const handleSubmit = async () => {
-    if (!form.name || !form.email) {
-      setError('Name and email are required.');
-      return;
-    }
-    setLoading(true);
-    setError('');
-    try {
-      await api.post('/build', { ...form, mode });
-      setSuccess(true);
-    } catch {
-      setError('Failed to submit. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+ const handleSubmit = async () => {
+  if (!form.name || !form.email || !form.description || !form.category) {
+    setError('Please fill all required fields.');
+    return;
+  }
+
+  setLoading(true);
+  setError('');
+
+  try {
+    await api.post('/build', {
+      name: form.name.trim(),
+      email: form.email.trim(),
+      description: form.description.trim(),
+      category: form.category,
+      budget: form.budget || null,
+      requirements: form.requirements || null,
+      mode: mode || 'structured',
+    });
+
+    setSuccess(true);
+  } catch (err: any) {
+    console.log('BUILD ERROR:', err?.response?.data);
+    setError(err?.response?.data?.message || 'Failed to submit');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <PublicLayout>
