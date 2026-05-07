@@ -1,11 +1,13 @@
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import type { BuildStatus } from '../types/build-status.type';
+import { BuildStatus } from '../types/build-status.type';
 
 export class UpdateBuildStatusDto {
-  @ApiProperty({ enum: ['pending', 'reviewed', 'accepted', 'rejected', 'in_progress', 'completed'] })
+  @ApiProperty({
+    enum: ['pending', 'reviewed', 'accepted', 'rejected', 'in_progress', 'completed'],
+  })
   @IsEnum(['pending', 'reviewed', 'accepted', 'rejected', 'in_progress', 'completed'])
-  status!: BuildStatus; // ✅ FIX HERE
+  status!: BuildStatus;
 
   @ApiProperty({ required: false })
   @IsOptional()
