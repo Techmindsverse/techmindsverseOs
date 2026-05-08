@@ -1,69 +1,82 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { CreateBuildDto } from './dto/create-build.dto';
 import { MailService } from '../mail/mail.service';
 import { BuildStatus } from './types/build-status.type';
 import { BuildLogsService } from './build-logs.service';
+import { BuildGateway } from './gateway/build.gateway';
 
 @Injectable()
 export class BuildService {
+  private readonly logger = new Logger(BuildService.name);
+
   constructor(
     private readonly supabaseService: SupabaseService,
     private readonly mailService: MailService,
     private readonly buildLogsService: BuildLogsService,
+    private readonly buildGateway: BuildGateway,
   ) {}
 
   // ==========================
-  // CREATE BUILD
+  // CREATE BUILD (SAFE + STRUCTURED)
   // ==========================
-  async submit(dto: CreateBuildDto) {
-    const { data, error } = await this.supabaseService.db
-      .from('builds')
-      .insert({
-        ...dto,
-        status: 'pending',
-        priority: 'normal',
-        payment_status: 'unpaid',
-        progress: 0,
-      })
-      .select()
-      .single();
+  async submit(dto: CreateBuildDto, clientIp?: string) {
+    try {
+      // 🧠 normalize budget (extract numbers if possible)
+      const normalizedBudget = this.normalizeBudget(dto.budget);
 
-    if (error || !data) {
-      throw new BadRequestException('Failed to submit build request');
+      // 🚀 insert build
+      const { data, error } = await this.supabaseService.clientRef
+        .from('builds')
+        .insert({
+          ...dto,
+          budget: normalizedBudget?.raw ?? null,
+          budget_min: normalizedBudget?.min ?? null,
+          budget_max: normalizedBudget?.max ?? null,
+          status: 'pending',
+          priority: 'normal',
+          payment_status: 'unpaid',
+          progress: 0,
+        })
+        .select()
+        .single();
+
+      if (error || !data) {
+        throw new BadRequestException('Failed to submit build request');
+      }
+
+      // 🔥 async email (do NOT block request)
+      this.safeEmailNotify(dto).catch((err) =>
+        this.logger.error('Email failed', err),
+      );
+
+      // 🪵 safe logging (never break request)
+      await this.safeLog(data.id, 'CREATED', 'Build submitted', {
+        ip: clientIp,
+      });
+
+      return {
+        message: 'Build request submitted successfully',
+        build: data,
+      };
+    } catch (error) {
+      this.logger.error('BUILD SUBMIT ERROR:', error);
+
+      throw new BadRequestException(
+        (error instanceof Error ? error.message : String(error)) || 'Failed to submit build request',
+      );
     }
-
-    // notify admin
-    await this.mailService.sendContactEmail({
-      name: dto.name,
-      email: dto.email,
-      subject: 'New Build Request',
-      message: dto.description,
-    });
-
-    // log
-    await this.buildLogsService.log(
-      data.id,
-      'CREATED',
-      'Build request submitted',
-      { status: 'pending' },
-    );
-
-    return {
-      message: 'Build request submitted successfully',
-      build: data,
-    };
   }
 
   // ==========================
-  // UPDATE STATUS
+  // STATUS UPDATE (with timeline support)
   // ==========================
-  async updateStatus(
-    id: string,
-    status: BuildStatus,
-    admin_note?: string,
-  ) {
-    const { data, error } = await this.supabaseService.db
+  async updateStatus(id: string, status: BuildStatus, admin_note?: string) {
+    const { data, error } = await this.supabaseService.clientRef
       .from('builds')
       .update({
         status,
@@ -77,21 +90,10 @@ export class BuildService {
       throw new BadRequestException('Failed to update build status');
     }
 
-    // notify client
-    await this.mailService.sendContactEmail({
-      name: data.name,
-      email: data.email,
-      subject: `Build Status Updated: ${status}`,
-      message: admin_note || 'Your build status has been updated.',
+    await this.safeLog(id, 'STATUS_UPDATED', `Status → ${status}`, {
+      status,
+      admin_note,
     });
-
-    // log
-    await this.buildLogsService.log(
-      id,
-      'STATUS_UPDATED',
-      `Status changed to ${status}`,
-      { status, admin_note },
-    );
 
     return {
       message: 'Build updated successfully',
@@ -103,7 +105,7 @@ export class BuildService {
   // ASSIGN BUILDER
   // ==========================
   async assignBuilder(id: string, assigned_to: string) {
-    const { data, error } = await this.supabaseService.db
+    const { data, error } = await this.supabaseService.clientRef
       .from('builds')
       .update({
         assigned_to,
@@ -117,12 +119,9 @@ export class BuildService {
       throw new BadRequestException('Failed to assign builder');
     }
 
-    await this.buildLogsService.log(
-      id,
-      'BUILDER_ASSIGNED',
-      `Builder assigned`,
-      { assigned_to },
-    );
+    await this.safeLog(id, 'ASSIGNED', 'Builder assigned', {
+      assigned_to,
+    });
 
     return {
       message: 'Builder assigned successfully',
@@ -135,10 +134,10 @@ export class BuildService {
   // ==========================
   async updateProgress(id: string, progress: number) {
     if (progress < 0 || progress > 100) {
-      throw new BadRequestException('Progress must be between 0 and 100');
+      throw new BadRequestException('Progress must be 0–100');
     }
 
-    const { data, error } = await this.supabaseService.db
+    const { data, error } = await this.supabaseService.clientRef
       .from('builds')
       .update({ progress })
       .eq('id', id)
@@ -149,12 +148,9 @@ export class BuildService {
       throw new BadRequestException('Failed to update progress');
     }
 
-    await this.buildLogsService.log(
-      id,
-      'PROGRESS_UPDATED',
-      `Progress updated to ${progress}%`,
-      { progress },
-    );
+    await this.safeLog(id, 'PROGRESS', `Progress → ${progress}%`, {
+      progress,
+    });
 
     return {
       message: 'Progress updated',
@@ -163,10 +159,10 @@ export class BuildService {
   }
 
   // ==========================
-  // GET ALL BUILDS
+  // FIND ALL
   // ==========================
   async findAll() {
-    const { data, error } = await this.supabaseService.db
+    const { data, error } = await this.supabaseService.clientRef
       .from('builds')
       .select('*')
       .order('created_at', { ascending: false });
@@ -179,75 +175,85 @@ export class BuildService {
   }
 
   // ==========================
-  // GET SINGLE BUILD
+  // ADMIN ANALYTICS (NEW 🔥)
   // ==========================
-  async findOne(id: string) {
-    const { data, error } = await this.supabaseService.db
+  async getDailyAnalytics(date?: string) {
+    const targetDate = date || new Date().toISOString().split('T')[0];
+
+    const { data, error } = await this.supabaseService.clientRef
       .from('builds')
       .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error || !data) {
-      throw new BadRequestException('Build not found');
-    }
-
-    return data;
-  }
-
-  // ==========================
-  // METRICS
-  // ==========================
-  async getMetrics() {
-    const { data, error } = await this.supabaseService.db
-      .from('builds')
-      .select('*');
+      .gte('created_at', `${targetDate}T00:00:00`)
+      .lte('created_at', `${targetDate}T23:59:59`);
 
     if (error) {
-      throw new BadRequestException('Failed to fetch metrics');
+      throw new BadRequestException('Failed to fetch analytics');
     }
 
-    const safeNumber = (value: any) => Number(value) || 0;
-
     return {
-      total_builds: data.length,
+      date: targetDate,
+      total: data.length,
       pending: data.filter((b) => b.status === 'pending').length,
-      reviewed: data.filter((b) => b.status === 'reviewed').length,
-      accepted: data.filter((b) => b.status === 'accepted').length,
       in_progress: data.filter((b) => b.status === 'in_progress').length,
       completed: data.filter((b) => b.status === 'completed').length,
-      rejected: data.filter((b) => b.status === 'rejected').length,
-      unpaid: data.filter((b) => b.payment_status === 'unpaid').length,
-
-      // ✅ FIXED (handles string/null safely)
-      revenue_estimate: data
-        .filter((b) => b.payment_status === 'paid')
-        .reduce((acc, b) => acc + safeNumber(b.budget), 0),
     };
   }
 
   // ==========================
-  // PIPELINE
+  // SAFE LOGGING (FIXES YOUR BUG)
   // ==========================
-  async getPipeline() {
-    const { data, error } = await this.supabaseService.db
-      .from('builds')
-      .select('*');
+  private async safeLog(
+    build_id: string,
+    action: string,
+    message?: string,
+    metadata?: any,
+    user?: string,
+  ) {
+    try {
+      await this.buildLogsService.log({
+  build_id: build_id,
+  action,
+  message,
+  metadata,
+  created_by: user,
+});
+    } catch (err) {
+      this.logger.warn('Build log failed (non-blocking)');
+    }
+  }
 
-    if (error) {
-      throw new BadRequestException('Failed to fetch pipeline');
+  // ==========================
+  // EMAIL SAFE QUEUE (SIMPLIFIED)
+  // ==========================
+  private async safeEmailNotify(dto: CreateBuildDto) {
+    try {
+      await this.mailService.sendContactEmail({
+        name: dto.name,
+        email: dto.email,
+        subject: 'New Build Request',
+        message: dto.description,
+      });
+    } catch (err) {
+      this.logger.error('Email send failed', err);
+    }
+  }
+
+  // ==========================
+  // BUDGET NORMALIZER (NEW 🔥)
+  // ==========================
+  private normalizeBudget(budget?: string) {
+    if (!budget) return null;
+
+    const numbers = budget.match(/\d+/g);
+
+    if (!numbers) {
+      return { raw: budget, min: null, max: null };
     }
 
-    const group = (status: string) =>
-      data.filter((b) => b.status === status);
-
     return {
-      pending: group('pending'),
-      reviewed: group('reviewed'),
-      accepted: group('accepted'),
-      in_progress: group('in_progress'),
-      completed: group('completed'),
-      rejected: group('rejected'),
+      raw: budget,
+      min: Number(numbers[0]),
+      max: numbers[1] ? Number(numbers[1]) : Number(numbers[0]),
     };
   }
 }

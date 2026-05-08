@@ -15,7 +15,7 @@ export class AdminService {
   async getAllPayments(page = 1, limit = 20) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
-    const { data, error, count } = await this.supabaseService.db
+    const { data, error, count } = await this.supabaseService.clientRef
       .from('payments')
       .select('*, users(email), courses(title)', { count: 'exact' })
       .order('created_at', { ascending: false })
@@ -25,7 +25,7 @@ export class AdminService {
   }
 
   async approvePayment(paymentId: string, dto: AdminNoteDto) {
-    const { data: payment, error } = await this.supabaseService.db
+    const { data: payment, error } = await this.supabaseService.clientRef
       .from('payments')
       .select('*, users(email, status)')
       .eq('id', paymentId)
@@ -33,14 +33,14 @@ export class AdminService {
 
     if (error || !payment) throw new NotFoundException('Payment not found');
 
-    await this.supabaseService.db
+    await this.supabaseService.clientRef
       .from('payments')
       .update({ status: 'approved', admin_note: dto.admin_note ?? null })
       .eq('id', paymentId);
 
     const { rawToken, hashedToken, expiresAt } = this.authService.generateActivationToken();
 
-    await this.supabaseService.db
+    await this.supabaseService.clientRef
       .from('users')
       .update({
         activation_token: hashedToken,
@@ -55,7 +55,7 @@ export class AdminService {
   }
 
   async rejectPayment(paymentId: string, dto: AdminNoteDto) {
-    const { error } = await this.supabaseService.db
+    const { error } = await this.supabaseService.clientRef
       .from('payments')
       .update({ status: 'rejected', admin_note: dto.admin_note ?? null })
       .eq('id', paymentId);
@@ -66,7 +66,7 @@ export class AdminService {
   async getAllStudents(page = 1, limit = 20) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
-    const { data, error, count } = await this.supabaseService.db
+    const { data, error, count } = await this.supabaseService.clientRef
       .from('students')
       .select('*, users(email, status)', { count: 'exact' })
       .order('created_at', { ascending: false })
@@ -78,7 +78,7 @@ export class AdminService {
   async getAllProjects(page = 1, limit = 20) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
-    const { data, error, count } = await this.supabaseService.db
+    const { data, error, count } = await this.supabaseService.clientRef
       .from('projects')
       .select('*, students(full_name)', { count: 'exact' })
       .order('created_at', { ascending: false })
@@ -90,7 +90,7 @@ export class AdminService {
   async getAllComplaints(page = 1, limit = 20) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
-    const { data, error, count } = await this.supabaseService.db
+    const { data, error, count } = await this.supabaseService.clientRef
       .from('complaints')
       .select('*, users(email)', { count: 'exact' })
       .order('created_at', { ascending: false })
@@ -102,7 +102,7 @@ export class AdminService {
   async getAllContacts(page = 1, limit = 20) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
-    const { data, error, count } = await this.supabaseService.db
+    const { data, error, count } = await this.supabaseService.clientRef
       .from('contacts')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
@@ -114,7 +114,7 @@ export class AdminService {
   async getAllBuilds(page = 1, limit = 20) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
-    const { data, error, count } = await this.supabaseService.db
+    const { data, error, count } = await this.supabaseService.clientRef
       .from('builds')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })

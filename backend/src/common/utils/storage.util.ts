@@ -21,7 +21,7 @@ export class StorageUtil {
     const fileName = sanitizeFileName(file.originalname).replace(/\.[^.]+$/, '.webp');
     const filePath = `${folder}/${fileName}`;
 
-    const { error } = await this.supabaseService.db.storage
+    const { error } = await this.supabaseService.clientRef.storage
       .from(bucket)
       .upload(filePath, compressed, {
         contentType: 'image/webp',
@@ -30,7 +30,7 @@ export class StorageUtil {
 
     if (error) throw new Error('Failed to upload file');
 
-    const { data } = this.supabaseService.db.storage
+    const { data } = this.supabaseService.clientRef.storage
       .from(bucket)
       .getPublicUrl(filePath);
 

@@ -7,7 +7,7 @@ export class ComplaintsService {
   constructor(private supabaseService: SupabaseService) {}
 
   async create(userId: string, dto: CreateComplaintDto) {
-    const { error } = await this.supabaseService.db
+    const { error } = await this.supabaseService.clientRef
       .from('complaints')
       .insert({ user_id: userId, ...dto, status: 'pending' });
     if (error) throw new Error('Failed to create complaint');

@@ -7,11 +7,11 @@ export class ProjectsService {
   constructor(private supabaseService: SupabaseService) {}
 
   async submit(userId: string, dto: CreateProjectDto) {
-    const { data: student } = await this.supabaseService.db
+    const { data: student } = await this.supabaseService.clientRef
       .from('students').select('id').eq('user_id', userId).single();
     if (!student) throw new NotFoundException('Student profile not found');
 
-    const { data, error } = await this.supabaseService.db
+    const { data, error } = await this.supabaseService.clientRef
       .from('projects')
       .insert({ student_id: student.id, ...dto, status: 'submitted' })
       .select().single();

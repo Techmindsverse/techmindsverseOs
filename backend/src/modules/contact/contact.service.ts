@@ -12,7 +12,7 @@ export class ContactService {
 
   async send(dto: CreateContactDto) {
     // 1. Save to Supabase
-    const { error } = await this.supabaseService.db
+    const { error } = await this.supabaseService.clientRef
       .from('contacts')
       .insert(dto);
 

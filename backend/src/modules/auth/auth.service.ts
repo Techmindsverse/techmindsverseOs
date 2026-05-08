@@ -14,7 +14,7 @@ export class AuthService {
   ) {}
 
   async login(email: string, password: string) {
-    const { data: user, error } = await this.supabaseService.db
+    const { data: user, error } = await this.supabaseService.clientRef
       .from('users')
       .select('*')
       .eq('email', email)
@@ -29,7 +29,7 @@ export class AuthService {
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
     if (!passwordMatch) throw new UnauthorizedException('Invalid credentials');
 
-    await this.supabaseService.db
+    await this.supabaseService.clientRef
       .from('user_activities')
       .insert({ user_id: user.id, action: 'LOGIN' });
 
@@ -44,7 +44,7 @@ export class AuthService {
   }
 
   async getMe(userId: string) {
-    const { data, error } = await this.supabaseService.db
+    const { data, error } = await this.supabaseService.clientRef
       .from('users')
       .select('id, email, role, status')
       .eq('id', userId)
@@ -57,7 +57,7 @@ export class AuthService {
   async validateActivationToken(token: string) {
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
-    const { data, error } = await this.supabaseService.db
+    const { data, error } = await this.supabaseService.clientRef
       .from('users')
       .select('id, email, status, activation_token_expires_at')
       .eq('activation_token', hashedToken)
@@ -80,7 +80,7 @@ export class AuthService {
   async activateAccount(token: string, password: string) {
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
-    const { data, error } = await this.supabaseService.db
+    const { data, error } = await this.supabaseService.clientRef
       .from('users')
       .select('*')
       .eq('activation_token', hashedToken)
@@ -96,7 +96,7 @@ export class AuthService {
 
     const password_hash = await bcrypt.hash(password, 12);
 
-    const { error: updateError } = await this.supabaseService.db
+    const { error: updateError } = await this.supabaseService.clientRef
       .from('users')
       .update({
         password_hash,
@@ -112,7 +112,7 @@ export class AuthService {
   }
 
   async forgotPassword(email: string) {
-    const { data: user } = await this.supabaseService.db
+    const { data: user } = await this.supabaseService.clientRef
       .from('users')
       .select('id, email, status')
       .eq('email', email)
@@ -128,7 +128,7 @@ export class AuthService {
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 1);
 
-    await this.supabaseService.db
+    await this.supabaseService.clientRef
       .from('users')
       .update({
         reset_token: hashedToken,
@@ -144,7 +144,7 @@ export class AuthService {
   async resetPassword(token: string, password: string) {
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
-    const { data, error } = await this.supabaseService.db
+    const { data, error } = await this.supabaseService.clientRef
       .from('users')
       .select('*')
       .eq('reset_token', hashedToken)
@@ -159,7 +159,7 @@ export class AuthService {
 
     const password_hash = await bcrypt.hash(password, 12);
 
-    await this.supabaseService.db
+    await this.supabaseService.clientRef
       .from('users')
       .update({
         password_hash,

@@ -7,7 +7,7 @@ export class PaymentsService {
   constructor(private supabaseService: SupabaseService) {}
 
   async createPayment(userId: string, dto: CreatePaymentDto) {
-    const { data, error } = await this.supabaseService.db
+    const { data, error } = await this.supabaseService.clientRef
       .from('payments')
       .insert({
         user_id: userId,
@@ -25,7 +25,7 @@ export class PaymentsService {
   }
 
   async getMyPayments(userId: string) {
-    const { data, error } = await this.supabaseService.db
+    const { data, error } = await this.supabaseService.clientRef
       .from('payments')
       .select('*, courses(title)')
       .eq('user_id', userId)

@@ -63,7 +63,7 @@ export default function BuildPage() {
       email: form.email.trim(),
       description: form.description.trim(),
       category: form.category,
-      budget: form.budget || null,
+      budget: form.budget,
       requirements: form.requirements || null,
       mode: mode || 'structured',
     });

@@ -24,7 +24,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    const { data, error } = await this.supabaseService.db
+    const { data, error } = await this.supabaseService.clientRef
       .from('users')
       .select('id, email, role, status')
       .eq('id', payload.sub)

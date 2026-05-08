@@ -6,7 +6,7 @@ export class StudentsService {
   constructor(private supabaseService: SupabaseService) {}
 
   async getProfile(userId: string) {
-    const { data, error } = await this.supabaseService.db
+    const { data, error } = await this.supabaseService.clientRef
       .from('students')
       .select('*, users(email, status), enrollments(*, courses(title, description)), projects(title, status), complaints(subject, status)')
       .eq('user_id', userId)
@@ -16,7 +16,7 @@ export class StudentsService {
   }
 
   async getById(id: string) {
-    const { data, error } = await this.supabaseService.db
+    const { data, error } = await this.supabaseService.clientRef
       .from('students')
       .select('*, users(email)')
       .eq('id', id)
