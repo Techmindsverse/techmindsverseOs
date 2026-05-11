@@ -23,26 +23,23 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any) {
-    const { data, error } = await this.supabaseService.clientRef
-      .from('users')
-      .select('id, email, role, status')
-      .eq('id', payload.sub)
-      .single();
+ async validate(payload: any) {
+  const { data, error } = await this.supabaseService.clientRef
+    .from('users')
+    .select('id, email, role, status')
+    .eq('id', payload.sub)
+    .single();
 
-    if (error || !data) {
-      throw new UnauthorizedException('User not found');
-    }
+  if (error || !data) throw new UnauthorizedException('User not found');
 
-    if (data.status !== 'active') {
-      throw new UnauthorizedException('Account is not active');
-    }
-
-    return {
-      id: data.id,
-      email: data.email,
-      role: data.role,
-      status: data.status,
-    };
+  // Admin always allowed
+  if (data.role === 'admin') {
+    return { id: data.id, email: data.email, role: data.role, status: data.status };
   }
-}
+
+  if (data.status !== 'active') {
+    throw new UnauthorizedException('Account is not active');
+  }
+
+  return { id: data.id, email: data.email, role: data.role, status: data.status };
+}}

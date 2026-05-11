@@ -4,9 +4,9 @@ import { BuildStatus } from '../types/build-status.type';
 
 export class UpdateBuildStatusDto {
   @ApiProperty({
-    enum: ['pending', 'reviewed', 'accepted', 'rejected', 'in_progress', 'completed'],
+    enum: ['submitted', 'reviewing', 'planning', 'in_progress', 'testing', 'completed', 'delivered', 'rejected'],
   })
-  @IsEnum(['pending', 'reviewed', 'accepted', 'rejected', 'in_progress', 'completed'])
+  @IsEnum(BuildStatus)
   status!: BuildStatus;
 
   @ApiProperty({ required: false })

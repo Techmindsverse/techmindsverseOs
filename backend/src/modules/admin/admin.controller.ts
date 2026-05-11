@@ -14,6 +14,18 @@ import { Roles } from '../../common/decorators/roles.decorator';
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
+  @Get('metrics')
+  @ApiOperation({ summary: 'Get system metrics' })
+  getMetrics() {
+    return this.adminService.getMetrics();
+  }
+
+  @Get('activity')
+  @ApiOperation({ summary: 'Get system activity feed' })
+  getActivity(@Query('page') page = 1, @Query('limit') limit = 20) {
+    return this.adminService.getActivity(+page, +limit);
+  }
+
   @Get('payments')
   @ApiOperation({ summary: 'Get all payments' })
   getAllPayments(@Query('page') page = 1, @Query('limit') limit = 20) {

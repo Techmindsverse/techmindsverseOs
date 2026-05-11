@@ -55,61 +55,70 @@ export class AuthService {
   }
 
   async validateActivationToken(token: string) {
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
-    const { data, error } = await this.supabaseService.clientRef
-      .from('users')
-      .select('id, email, status, activation_token_expires_at')
-      .eq('activation_token', hashedToken)
-      .single();
+  const { data, error } = await this.supabaseService.clientRef
+    .from('users')
+    .select('id, email, status, activation_token_expires_at')
+    .eq('activation_token', hashedToken)
+    .single();
 
-    if (error || !data) throw new NotFoundException('Invalid activation token');
-    if (data.status === 'active') throw new BadRequestException('Account already activated');
+  if (error || !data) throw new NotFoundException('Invalid activation token');
 
-    const now = new Date();
-    if (now > new Date(data.activation_token_expires_at)) {
-      throw new BadRequestException('Activation token has expired');
-    }
+  if (data.status === 'active') throw new BadRequestException('Account already activated');
 
-    return {
-      valid: true,
-      email: data.email.replace(/(.{2}).*(@.*)/, '$1***$2'),
-    };
+  const now = new Date();
+  if (now > new Date(data.activation_token_expires_at)) {
+    throw new BadRequestException('Activation token has expired');
   }
 
-  async activateAccount(token: string, password: string) {
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+  return {
+    valid: true,
+    email: data.email.replace(/(.{2}).*(@.*)/, '$1***$2'),
+  };
+}
 
-    const { data, error } = await this.supabaseService.clientRef
-      .from('users')
-      .select('*')
-      .eq('activation_token', hashedToken)
-      .single();
+ 
 
-    if (error || !data) throw new NotFoundException('Invalid activation token');
-    if (data.status === 'active') throw new BadRequestException('Account already activated');
+    async activateAccount(token: string, password: string) {
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
-    const now = new Date();
-    if (now > new Date(data.activation_token_expires_at)) {
-      throw new BadRequestException('Activation token has expired');
-    }
+  const { data, error } = await this.supabaseService.clientRef
+    .from('users')
+    .select('*')
+    .eq('activation_token', hashedToken)
+    .single();
 
-    const password_hash = await bcrypt.hash(password, 12);
+  if (error || !data) throw new NotFoundException('Invalid activation token');
 
-    const { error: updateError } = await this.supabaseService.clientRef
-      .from('users')
-      .update({
-        password_hash,
-        status: 'active',
-        activation_token: null,
-        activation_token_expires_at: null,
-      })
-      .eq('id', data.id);
+  if (data.status === 'active') throw new BadRequestException('Account already activated');
 
-    if (updateError) throw new BadRequestException('Failed to activate account');
-
-    return { message: 'Account activated successfully. You can now log in.' };
+  const now = new Date();
+  if (now > new Date(data.activation_token_expires_at)) {
+    throw new BadRequestException('Activation token has expired');
   }
+
+  const password_hash = await bcrypt.hash(password, 12);
+
+  const { error: updateError } = await this.supabaseService.clientRef
+    .from('users')
+    .update({
+      password_hash,
+      status: 'active',
+      activation_token: null,
+      activation_token_expires_at: null,
+    })
+    .eq('id', data.id);
+
+  if (updateError) throw new BadRequestException('Failed to activate account');
+
+  // Log activity
+  await this.supabaseService.clientRef
+    .from('user_activities')
+    .insert({ user_id: data.id, action: 'ACCOUNT_ACTIVATED' });
+
+  return { message: 'Account activated successfully. You can now log in.' };
+}
 
   async forgotPassword(email: string) {
     const { data: user } = await this.supabaseService.clientRef

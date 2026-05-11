@@ -33,15 +33,15 @@ export class BuildService {
       const { data, error } = await this.supabaseService.clientRef
         .from('builds')
         .insert({
-          ...dto,
-          budget: normalizedBudget?.raw ?? null,
-          budget_min: normalizedBudget?.min ?? null,
-          budget_max: normalizedBudget?.max ?? null,
-          status: 'pending',
-          priority: 'normal',
-          payment_status: 'unpaid',
-          progress: 0,
-        })
+  ...dto,
+  budget: normalizedBudget?.raw ?? null,
+  budget_min: normalizedBudget?.min ?? null,
+  budget_max: normalizedBudget?.max ?? null,
+  status: 'submitted',
+  priority: 'normal',
+  payment_status: 'unpaid',
+  progress: 0,
+})
         .select()
         .single();
 
@@ -227,12 +227,14 @@ export class BuildService {
   // ==========================
   private async safeEmailNotify(dto: CreateBuildDto) {
     try {
-      await this.mailService.sendContactEmail({
-        name: dto.name,
-        email: dto.email,
-        subject: 'New Build Request',
-        message: dto.description,
-      });
+      await this.mailService.sendBuildRequestEmail({
+  name: dto.name,
+  email: dto.email,
+  category: dto.category,
+  description: dto.description,
+  budget: dto.budget,
+  mode: dto.mode,
+});
     } catch (err) {
       this.logger.error('Email send failed', err);
     }

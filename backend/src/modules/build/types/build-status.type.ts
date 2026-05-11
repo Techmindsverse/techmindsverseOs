@@ -1,8 +1,10 @@
 export enum BuildStatus {
-  PENDING = 'pending',
-  REVIEWED = 'reviewed',
-  ACCEPTED = 'accepted',
-  REJECTED = 'rejected',
+  SUBMITTED = 'submitted',
+  REVIEWING = 'reviewing',
+  PLANNING = 'planning',
   IN_PROGRESS = 'in_progress',
+  TESTING = 'testing',
   COMPLETED = 'completed',
+  DELIVERED = 'delivered',
+  REJECTED = 'rejected',
 }
