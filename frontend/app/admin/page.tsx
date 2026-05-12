@@ -7,8 +7,7 @@ import { useAuthStore } from '@/app/lib/store/auth.store';
 import {
   LogOut, LayoutDashboard, CreditCard, Users,
   FolderOpen, AlertCircle, MessageSquare, Package,
-  Activity, CheckCircle, XCircle, ChevronRight,
-  TrendingUp, Clock, RefreshCw
+  Activity, CheckCircle, XCircle, ChevronRight, RefreshCw
 } from 'lucide-react';
 
 type Tab = 'overview' | 'payments' | 'students' | 'projects' | 'complaints' | 'contacts' | 'builds' | 'activity';
@@ -62,6 +61,9 @@ export default function AdminPage() {
   useEffect(() => {
     const token = localStorage.getItem('tmv_token');
     if (!token) { router.push('/login'); return; }
+  }, []);
+
+  useEffect(() => {
     fetchTab(activeTab);
   }, [activeTab]);
 
@@ -87,7 +89,7 @@ export default function AdminPage() {
     try {
       await api.patch(`/admin/payments/${id}/approve`, {});
       fetchTab('payments');
-    } catch { alert('Failed to approve'); }
+    } catch { alert('Failed to approve payment'); }
     finally { setActionLoading(null); }
   };
 
@@ -96,7 +98,7 @@ export default function AdminPage() {
     try {
       await api.patch(`/admin/payments/${id}/reject`, {});
       fetchTab('payments');
-    } catch { alert('Failed to reject'); }
+    } catch { alert('Failed to reject payment'); }
     finally { setActionLoading(null); }
   };
 
@@ -105,7 +107,7 @@ export default function AdminPage() {
     try {
       await api.patch(`/build/${id}/status`, { status });
       fetchTab('builds');
-    } catch { alert('Failed to update status'); }
+    } catch { alert('Failed to update build status'); }
     finally { setActionLoading(null); }
   };
 
@@ -128,12 +130,14 @@ export default function AdminPage() {
 
   const statusColor = (status: string) => {
     if (!status) return 'text-white/40 border-white/10 bg-transparent';
-    if (['approved', 'active', 'completed', 'resolved'].includes(status))
+    if (['approved', 'active', 'completed', 'resolved', 'delivered'].includes(status))
       return 'text-green-400 border-green-400/20 bg-green-400/10';
     if (['rejected', 'failed'].includes(status))
       return 'text-red-400 border-red-400/20 bg-red-400/10';
-    if (['in_progress', 'accepted'].includes(status))
+    if (['in_progress', 'planning', 'testing'].includes(status))
       return 'text-blue-400 border-blue-400/20 bg-blue-400/10';
+    if (['reviewing'].includes(status))
+      return 'text-purple-400 border-purple-400/20 bg-purple-400/10';
     return 'text-yellow-400 border-yellow-400/20 bg-yellow-400/10';
   };
 
@@ -152,7 +156,6 @@ export default function AdminPage() {
             </div>
             <p className="text-white/20 text-xs pl-8">{user?.email}</p>
           </div>
-
           <nav className="space-y-1">
             {tabs.map(tab => (
               <button
@@ -170,7 +173,6 @@ export default function AdminPage() {
             ))}
           </nav>
         </div>
-
         <button
           onClick={handleLogout}
           className="flex items-center gap-2 text-white/20 hover:text-white text-sm transition px-3"
@@ -197,7 +199,6 @@ export default function AdminPage() {
         </div>
 
         <div className="p-8">
-
           {loading ? (
             <div className="flex items-center justify-center py-24">
               <p className="text-white/20 text-sm">Loading...</p>
@@ -205,9 +206,9 @@ export default function AdminPage() {
           ) : (
             <>
 
-              {/* ===== OVERVIEW ===== */}
+              {/* OVERVIEW */}
               {activeTab === 'overview' && metrics && (
-                <div className="space-y-8">
+                <div className="space-y-6">
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                     {[
                       { label: 'Total Users', value: metrics.total_users, color: 'text-white' },
@@ -222,7 +223,6 @@ export default function AdminPage() {
                       </div>
                     ))}
                   </div>
-
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
                       { label: 'Revenue (Approved)', value: `₦${metrics.total_revenue.toLocaleString()}`, color: 'text-green-400' },
@@ -236,7 +236,6 @@ export default function AdminPage() {
                       </div>
                     ))}
                   </div>
-
                   <div className="grid grid-cols-2 gap-4">
                     <div className="border border-white/5 p-5">
                       <h3 className="font-bebas text-lg text-white mb-1">APPROVED PAYMENTS</h3>
@@ -250,7 +249,7 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {/* ===== PAYMENTS ===== */}
+              {/* PAYMENTS */}
               {activeTab === 'payments' && (
                 <div className="space-y-3">
                   {data.length === 0 ? (
@@ -298,7 +297,7 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {/* ===== STUDENTS ===== */}
+              {/* STUDENTS */}
               {activeTab === 'students' && (
                 <div className="space-y-3">
                   {data.length === 0 ? (
@@ -322,7 +321,7 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {/* ===== PROJECTS ===== */}
+              {/* PROJECTS */}
               {activeTab === 'projects' && (
                 <div className="space-y-3">
                   {data.length === 0 ? (
@@ -349,7 +348,7 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {/* ===== COMPLAINTS ===== */}
+              {/* COMPLAINTS */}
               {activeTab === 'complaints' && (
                 <div className="space-y-3">
                   {data.length === 0 ? (
@@ -377,7 +376,7 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {/* ===== CONTACTS ===== */}
+              {/* CONTACTS */}
               {activeTab === 'contacts' && (
                 <div className="space-y-3">
                   {data.length === 0 ? (
@@ -394,7 +393,7 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {/* ===== BUILDS ===== */}
+              {/* BUILDS */}
               {activeTab === 'builds' && !selectedBuild && (
                 <div className="space-y-3">
                   {data.length === 0 ? (
@@ -419,8 +418,6 @@ export default function AdminPage() {
                           {build.budget && (
                             <p className="text-white/20 text-xs mt-1">Budget: {build.budget}</p>
                           )}
-
-                          {/* Progress bar */}
                           {build.progress > 0 && (
                             <div className="mt-3">
                               <div className="flex justify-between text-xs text-white/30 mb-1">
@@ -435,7 +432,6 @@ export default function AdminPage() {
                               </div>
                             </div>
                           )}
-
                           <p className="text-white/20 text-xs mt-2">
                             {new Date(build.created_at).toLocaleString()}
                           </p>
@@ -446,25 +442,24 @@ export default function AdminPage() {
                             {build.status}
                           </span>
 
-                          {/* Status actions */}
                           <div className="flex flex-wrap gap-1 justify-end">
-                            {build.status === 'pending' && (
+                            {build.status === 'submitted' && (
                               <button
-                                onClick={() => handleBuildStatusUpdate(build.id, 'reviewed')}
+                                onClick={() => handleBuildStatusUpdate(build.id, 'reviewing')}
                                 disabled={actionLoading === build.id}
                                 className="text-xs border border-white/10 text-white/40 px-2 py-1 hover:border-brand-blue hover:text-brand-blue transition disabled:opacity-50"
                               >
-                                Mark Reviewed
+                                Start Review
                               </button>
                             )}
-                            {build.status === 'reviewed' && (
+                            {build.status === 'reviewing' && (
                               <>
                                 <button
-                                  onClick={() => handleBuildStatusUpdate(build.id, 'accepted')}
+                                  onClick={() => handleBuildStatusUpdate(build.id, 'planning')}
                                   disabled={actionLoading === build.id}
-                                  className="text-xs border border-green-500/30 text-green-400 px-2 py-1 hover:bg-green-500/10 transition disabled:opacity-50"
+                                  className="text-xs border border-blue-500/30 text-blue-400 px-2 py-1 hover:bg-blue-500/10 transition disabled:opacity-50"
                                 >
-                                  Accept
+                                  Move to Planning
                                 </button>
                                 <button
                                   onClick={() => handleBuildStatusUpdate(build.id, 'rejected')}
@@ -475,7 +470,7 @@ export default function AdminPage() {
                                 </button>
                               </>
                             )}
-                            {build.status === 'accepted' && (
+                            {build.status === 'planning' && (
                               <button
                                 onClick={() => handleBuildStatusUpdate(build.id, 'in_progress')}
                                 disabled={actionLoading === build.id}
@@ -491,18 +486,45 @@ export default function AdminPage() {
                                   defaultValue={build.progress}
                                   className="text-xs bg-black border border-white/10 text-white/40 px-2 py-1"
                                 >
-                                  {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(v => (
+                                  {[0,10,20,30,40,50,60,70,80,90,100].map(v => (
                                     <option key={v} value={v}>{v}%</option>
                                   ))}
                                 </select>
+                                <button
+                                  onClick={() => handleBuildStatusUpdate(build.id, 'testing')}
+                                  disabled={actionLoading === build.id}
+                                  className="text-xs border border-yellow-500/30 text-yellow-400 px-2 py-1 hover:bg-yellow-500/10 transition disabled:opacity-50"
+                                >
+                                  Move to Testing
+                                </button>
+                              </>
+                            )}
+                            {build.status === 'testing' && (
+                              <>
                                 <button
                                   onClick={() => handleBuildStatusUpdate(build.id, 'completed')}
                                   disabled={actionLoading === build.id}
                                   className="text-xs border border-green-500/30 text-green-400 px-2 py-1 hover:bg-green-500/10 transition disabled:opacity-50"
                                 >
-                                  Complete
+                                  Mark Completed
+                                </button>
+                                <button
+                                  onClick={() => handleBuildStatusUpdate(build.id, 'in_progress')}
+                                  disabled={actionLoading === build.id}
+                                  className="text-xs border border-white/10 text-white/40 px-2 py-1 hover:border-white/30 transition disabled:opacity-50"
+                                >
+                                  Back to Build
                                 </button>
                               </>
+                            )}
+                            {build.status === 'completed' && (
+                              <button
+                                onClick={() => handleBuildStatusUpdate(build.id, 'delivered')}
+                                disabled={actionLoading === build.id}
+                                className="text-xs border border-green-500/30 text-green-400 px-2 py-1 hover:bg-green-500/10 transition disabled:opacity-50"
+                              >
+                                Mark Delivered
+                              </button>
                             )}
                           </div>
 
@@ -519,7 +541,7 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {/* ===== BUILD DETAIL / LOGS ===== */}
+              {/* BUILD DETAIL */}
               {activeTab === 'builds' && selectedBuild && (
                 <div>
                   <button
@@ -528,31 +550,22 @@ export default function AdminPage() {
                   >
                     ← Back to Builds
                   </button>
-
                   <div className="grid md:grid-cols-2 gap-6 mb-8">
                     <div className="border border-white/5 p-6">
                       <h3 className="font-bebas text-xl text-white mb-4">CLIENT INFO</h3>
                       <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-white/30">Name</span>
-                          <span className="text-white">{selectedBuild.name}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-white/30">Email</span>
-                          <span className="text-white">{selectedBuild.email}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-white/30">Category</span>
-                          <span className="text-white capitalize">{selectedBuild.category}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-white/30">Budget</span>
-                          <span className="text-white">{selectedBuild.budget || '—'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-white/30">Mode</span>
-                          <span className="text-white capitalize">{selectedBuild.mode || '—'}</span>
-                        </div>
+                        {[
+                          { label: 'Name', value: selectedBuild.name },
+                          { label: 'Email', value: selectedBuild.email },
+                          { label: 'Category', value: selectedBuild.category },
+                          { label: 'Budget', value: selectedBuild.budget || '—' },
+                          { label: 'Mode', value: selectedBuild.mode || '—' },
+                        ].map((item, i) => (
+                          <div key={i} className="flex justify-between">
+                            <span className="text-white/30">{item.label}</span>
+                            <span className="text-white capitalize">{item.value}</span>
+                          </div>
+                        ))}
                         <div className="flex justify-between">
                           <span className="text-white/30">Status</span>
                           <span className={`text-xs border px-2 py-0.5 capitalize ${statusColor(selectedBuild.status)}`}>
@@ -561,9 +574,8 @@ export default function AdminPage() {
                         </div>
                       </div>
                     </div>
-
                     <div className="border border-white/5 p-6">
-                      <h3 className="font-bebas text-xl text-white mb-4">PROJECT DESCRIPTION</h3>
+                      <h3 className="font-bebas text-xl text-white mb-4">PROJECT DETAILS</h3>
                       <p className="text-white/50 text-sm leading-relaxed">{selectedBuild.description}</p>
                       {selectedBuild.requirements && (
                         <>
@@ -571,8 +583,6 @@ export default function AdminPage() {
                           <p className="text-white/40 text-sm leading-relaxed">{selectedBuild.requirements}</p>
                         </>
                       )}
-
-                      {/* Progress */}
                       <div className="mt-4">
                         <div className="flex justify-between text-xs text-white/30 mb-1">
                           <span>Progress</span>
@@ -587,8 +597,6 @@ export default function AdminPage() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Build Logs */}
                   <div className="border border-white/5 p-6">
                     <h3 className="font-bebas text-xl text-white mb-4">BUILD TIMELINE</h3>
                     {buildLogs.length === 0 ? (
@@ -605,12 +613,8 @@ export default function AdminPage() {
                             </div>
                             <div className="pb-4">
                               <p className="text-white text-sm font-medium">{log.action}</p>
-                              {log.message && (
-                                <p className="text-white/40 text-xs mt-0.5">{log.message}</p>
-                              )}
-                              <p className="text-white/20 text-xs mt-1">
-                                {new Date(log.created_at).toLocaleString()}
-                              </p>
+                              {log.message && <p className="text-white/40 text-xs mt-0.5">{log.message}</p>}
+                              <p className="text-white/20 text-xs mt-1">{new Date(log.created_at).toLocaleString()}</p>
                             </div>
                           </div>
                         ))}
@@ -620,7 +624,7 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {/* ===== ACTIVITY ===== */}
+              {/* ACTIVITY */}
               {activeTab === 'activity' && (
                 <div className="space-y-2">
                   {data.length === 0 ? (
