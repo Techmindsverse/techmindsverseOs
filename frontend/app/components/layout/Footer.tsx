@@ -30,15 +30,28 @@ const footerLinks = {
     { label: 'Build', href: '/build' },
     { label: 'Services', href: '/services' },
     { label: 'Products', href: '/products' },
+    { label: 'Roadmap', href: '/roadmap' },
   ],
+
   Company: [
     { label: 'About', href: '/about' },
     { label: 'Team', href: '/team' },
     { label: 'Contact', href: '/contact' },
+    { label: 'FAQ', href: '/faq' },
+    { label: 'Community Guidelines', href: '/community-guidelines' },
   ],
+
+  Legal: [
+    { label: 'Privacy Policy', href: '/privacy-policy' },
+    { label: 'Terms of Service', href: '/terms-of-service' },
+    { label: 'Refund Policy', href: '/refund-policy' },
+    { label: 'Cookie Policy', href: '/cookie-policy' },
+  ],
+
   Account: [
     { label: 'Login', href: '/login' },
     { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Join Ecosystem', href:'/enroll' },
   ],
 };
 
@@ -54,26 +67,27 @@ export default function Footer() {
     <footer className="border-t border-brand-border bg-brand-gray">
       <div className="max-w-7xl mx-auto px-6 py-16">
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12">
 
           {/* LOGO */}
           <div className="lg:col-span-2">
-           
-                
-          <Link href="/" className="flex items-center gap-2 group">
-           <img
-    src="/logo.png"
-    alt="TechMindsVerse Logo"
-    className="w-12 h-12 relative z-10 rounded-md hover:scale-110 transition-transform duration-300"
-  />
+
+            <Link href="/" className="flex items-center gap-2 group">
+              <img
+                src="/logo.png"
+                alt="TechMindsVerse Logo"
+                className="w-12 h-12 relative z-10 rounded-md hover:scale-110 transition-transform duration-300"
+              />
+
               <span className="font-bebas text-xl tracking-widest text-white">
                 TECHMINDSVERSE
               </span>
             </Link>
 
-            <p className="text-white/50 text-sm leading-relaxed max-w-xs">
-              TechMindsVerse is a tech ecosystem designed to build people, products, and systems —
-              combining learning, execution, and real-world digital solutions into one platform.
+            <p className="text-white/50 text-sm leading-relaxed max-w-xs mt-5">
+              TechMindsVerse is a tech ecosystem designed to build people,
+              products, and systems — combining learning, execution,
+              and real-world digital solutions into one platform.
             </p>
 
             {/* SOCIALS */}
@@ -123,6 +137,36 @@ export default function Footer() {
           <p className="text-white/30 text-sm">
             © 2026 TechMindsVerse. All rights reserved.
           </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
+            <Link
+              href="/privacy-policy"
+              className="text-white/30 hover:text-white transition-colors"
+            >
+              Privacy
+            </Link>
+
+            <Link
+              href="/terms-of-service"
+              className="text-white/30 hover:text-white transition-colors"
+            >
+              Terms
+            </Link>
+
+            <Link
+              href="/cookie-policy"
+              className="text-white/30 hover:text-white transition-colors"
+            >
+              Cookies
+            </Link>
+
+            <Link
+              href="/faq"
+              className="text-white/30 hover:text-white transition-colors"
+            >
+              FAQ
+            </Link>
+          </div>
 
           <p className="text-white/30 text-sm">
             Built by{' '}
