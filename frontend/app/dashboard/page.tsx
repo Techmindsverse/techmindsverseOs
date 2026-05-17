@@ -8,7 +8,7 @@ import { useAuthStore } from '@/app/lib/store/auth.store';
 import {
   LogOut, User, CreditCard, FolderOpen,
   AlertCircle, Home, BookOpen, Package,
-  Bell, Settings, ChevronRight, Activity
+  Bell, Activity
 } from 'lucide-react';
 
 interface Payment {
@@ -58,16 +58,15 @@ export default function DashboardPage() {
     fetchData();
   }, []);
 
+  // FIX: catch errors per request, don't redirect on 404
   const fetchData = async () => {
     try {
       const [profileRes, paymentsRes] = await Promise.all([
-        api.get('/students/me'),
-        api.get('/payments/my'),
+        api.get('/students/me').catch(() => ({ data: null })),
+        api.get('/payments/my').catch(() => ({ data: [] })),
       ]);
       setProfile(profileRes.data);
       setPayments(paymentsRes.data || []);
-    } catch {
-      router.push('/login');
     } finally {
       setLoading(false);
     }
@@ -105,7 +104,10 @@ export default function DashboardPage() {
 
   const approvedPayments = payments.filter(p => p.status === 'approved').length;
   const pendingPayments = payments.filter(p => p.status === 'pending').length;
-  const isActive = profile?.users?.status === 'active';
+
+  // FIX: isActive checks both profile status AND falls back to true
+  // so users without a student profile still see the dashboard
+  const isActive = profile?.users?.status === 'active' || profile?.users?.status === undefined;
 
   if (loading) {
     return (
@@ -124,7 +126,6 @@ export default function DashboardPage() {
       {/* SIDEBAR */}
       <aside className="w-60 border-r border-white/5 flex flex-col justify-between py-6 px-4 sticky top-0 h-screen shrink-0">
         <div>
-          {/* Brand */}
           <Link href="/" className="flex items-center gap-2 mb-8">
             <div className="w-7 h-7 bg-brand-blue rounded-sm flex items-center justify-center shrink-0">
               <span className="font-bebas text-white text-sm">T</span>
@@ -132,7 +133,6 @@ export default function DashboardPage() {
             <span className="font-bebas tracking-widest text-sm text-white">TECHMINDSVERSE</span>
           </Link>
 
-          {/* User info */}
           <div className="border border-white/5 p-4 mb-6">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 bg-brand-blue/20 border border-brand-blue/30 rounded-sm flex items-center justify-center shrink-0">
@@ -149,13 +149,16 @@ export default function DashboardPage() {
               <span className="text-xs border border-brand-blue/30 text-brand-blue px-2 py-0.5 capitalize">
                 {user?.role || 'student'}
               </span>
-              <span className={`text-xs border px-2 py-0.5 capitalize ${isActive ? 'text-green-400 border-green-400/20' : 'text-yellow-400 border-yellow-400/20'}`}>
+              <span className={`text-xs border px-2 py-0.5 capitalize ${
+                profile?.users?.status === 'active'
+                  ? 'text-green-400 border-green-400/20'
+                  : 'text-yellow-400 border-yellow-400/20'
+              }`}>
                 {profile?.users?.status || 'active'}
               </span>
             </div>
           </div>
 
-          {/* Nav */}
           <nav className="space-y-1">
             {tabs.map(tab => (
               <button
@@ -173,7 +176,6 @@ export default function DashboardPage() {
             ))}
           </nav>
 
-          {/* Quick actions */}
           <div className="mt-6 space-y-1">
             <p className="text-white/20 text-xs uppercase tracking-widest px-3 mb-2">Quick Actions</p>
             <Link
@@ -207,8 +209,6 @@ export default function DashboardPage() {
 
       {/* MAIN */}
       <main className="flex-1 overflow-auto">
-
-        {/* Top bar */}
         <div className="border-b border-white/5 px-8 py-4 flex items-center justify-between sticky top-0 bg-black z-10">
           <div>
             <h2 className="font-bebas text-2xl tracking-wide">
@@ -216,11 +216,9 @@ export default function DashboardPage() {
             </h2>
             <p className="text-white/20 text-xs">TechMindsVerse OS</p>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-white/20 text-xs hidden md:block">
-              Welcome back, {profile?.full_name?.split(' ')[0] || 'there'}
-            </span>
-          </div>
+          <span className="text-white/20 text-xs hidden md:block">
+            Welcome back, {profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there'}
+          </span>
         </div>
 
         <div className="p-8">
@@ -229,20 +227,18 @@ export default function DashboardPage() {
           {activeTab === 'overview' && (
             <div className="space-y-6">
 
-              {/* Activation warning */}
-              {!isActive && (
+              {profile?.users?.status && profile.users.status !== 'active' && (
                 <div className="border border-yellow-500/30 bg-yellow-500/5 p-4 flex items-start gap-3">
                   <Bell size={16} className="text-yellow-400 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-yellow-400 text-sm font-medium">Account Pending Activation</p>
                     <p className="text-white/40 text-xs mt-1">
-                      Check your email for the activation link, or contact support if you need help.
+                      Check your email for the activation link, or contact support.
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
                   { label: 'Total Payments', value: payments.length, color: 'text-white' },
@@ -257,52 +253,50 @@ export default function DashboardPage() {
                 ))}
               </div>
 
-              {/* Profile */}
               <div className="border border-white/5 p-6">
                 <h3 className="font-bebas text-xl text-white mb-4 flex items-center gap-2">
                   <User size={16} className="text-brand-blue" /> MY PROFILE
                 </h3>
-                <div className="grid md:grid-cols-2 gap-6 text-sm">
-                  {[
-                    { label: 'Full Name', value: profile?.full_name || '—' },
-                    { label: 'Email', value: profile?.users?.email || user?.email || '—' },
-                    { label: 'Track', value: profile?.track || 'Not assigned' },
-                    { label: 'Account Status', value: profile?.users?.status || 'active' },
-                    { label: 'Performance Score', value: profile?.performance_score?.toString() || 'Not scored yet' },
-                    { label: 'Rank', value: profile?.rank?.toString() || 'Unranked' },
-                  ].map((item, i) => (
-                    <div key={i}>
-                      <p className="text-white/30 mb-1">{item.label}</p>
-                      <p className="text-white capitalize">{item.value}</p>
-                    </div>
-                  ))}
-                </div>
+                {profile ? (
+                  <div className="grid md:grid-cols-2 gap-6 text-sm">
+                    {[
+                      { label: 'Full Name', value: profile.full_name || '—' },
+                      { label: 'Email', value: profile.users?.email || user?.email || '—' },
+                      { label: 'Track', value: profile.track || 'Not assigned' },
+                      { label: 'Account Status', value: profile.users?.status || 'active' },
+                      { label: 'Performance Score', value: profile.performance_score?.toString() || 'Not scored yet' },
+                      { label: 'Rank', value: profile.rank?.toString() || 'Unranked' },
+                    ].map((item, i) => (
+                      <div key={i}>
+                        <p className="text-white/30 mb-1">{item.label}</p>
+                        <p className="text-white capitalize">{item.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-white/30 text-sm mb-2">No student profile found.</p>
+                    <p className="text-white/20 text-xs">Contact support if you enrolled and don't see your profile.</p>
+                  </div>
+                )}
               </div>
 
-              {/* Ecosystem modules */}
               <div>
                 <h3 className="font-bebas text-xl text-white mb-4">ECOSYSTEM MODULES</h3>
                 <div className="grid md:grid-cols-3 gap-4">
                   {[
-                    { icon: BookOpen, label: 'Academy', desc: 'Access your courses and learning materials', href: '/academy', available: isActive },
+                    { icon: BookOpen, label: 'Academy', desc: 'Access your courses and learning materials', href: '/academy', available: true },
                     { icon: Package, label: 'Build Studio', desc: 'Submit and track your build requests', href: '/build', available: true },
-                    { icon: Activity, label: 'Projects', desc: 'Submit and manage your projects', href: '#', available: isActive, action: () => setActiveTab('projects') },
+                    { icon: Activity, label: 'Projects', desc: 'Submit and manage your projects', action: () => setActiveTab('projects'), available: true },
                   ].map((module, i) => (
                     <div
                       key={i}
                       onClick={module.action}
-                      className={`border p-5 transition-colors ${
-                        module.available
-                          ? 'border-white/5 hover:border-brand-blue/30 cursor-pointer'
-                          : 'border-white/5 opacity-40 cursor-not-allowed'
-                      }`}
+                      className="border border-white/5 p-5 hover:border-brand-blue/30 cursor-pointer transition-colors"
                     >
                       <module.icon size={20} className="text-brand-blue mb-3" />
                       <p className="text-white font-medium text-sm">{module.label}</p>
                       <p className="text-white/30 text-xs mt-1 leading-relaxed">{module.desc}</p>
-                      {!module.available && (
-                        <span className="text-xs text-yellow-400 mt-2 inline-block">Requires active account</span>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -322,7 +316,6 @@ export default function DashboardPage() {
                   + Submit Payment
                 </Link>
               </div>
-
               {payments.length === 0 ? (
                 <div className="border border-white/5 p-12 text-center">
                   <CreditCard size={32} className="text-white/10 mx-auto mb-4" />
@@ -363,10 +356,7 @@ export default function DashboardPage() {
                 <div className="border border-green-500/30 bg-green-500/10 text-green-400 p-6">
                   <p className="font-medium mb-1">Project submitted successfully.</p>
                   <p className="text-sm text-green-400/70">Your instructor will review it shortly.</p>
-                  <button
-                    onClick={() => setSubmitSuccess(false)}
-                    className="text-sm mt-4 text-green-400 hover:underline"
-                  >
+                  <button onClick={() => setSubmitSuccess(false)} className="text-sm mt-4 text-green-400 hover:underline">
                     Submit another →
                   </button>
                 </div>
@@ -413,7 +403,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* COMPLAINTS / SUPPORT */}
+          {/* SUPPORT */}
           {activeTab === 'complaints' && (
             <div>
               <h2 className="font-bebas text-2xl text-white mb-2">SUPPORT</h2>
@@ -422,10 +412,7 @@ export default function DashboardPage() {
                 <div className="border border-green-500/30 bg-green-500/10 text-green-400 p-6">
                   <p className="font-medium mb-1">Complaint submitted.</p>
                   <p className="text-sm text-green-400/70">Our team will respond shortly.</p>
-                  <button
-                    onClick={() => setComplaintSuccess(false)}
-                    className="text-sm mt-4 text-green-400 hover:underline"
-                  >
+                  <button onClick={() => setComplaintSuccess(false)} className="text-sm mt-4 text-green-400 hover:underline">
                     Submit another →
                   </button>
                 </div>

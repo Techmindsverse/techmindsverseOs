@@ -8,9 +8,10 @@ export class StudentsService {
   async getProfile(userId: string) {
     const { data, error } = await this.supabaseService.clientRef
       .from('students')
-      .select('*, users(email, status), enrollments(*, courses(title, description)), projects(title, status), complaints(subject, status)')
+      .select('*, users(email, status, role), projects(title, status), complaints(subject, status)')
       .eq('user_id', userId)
       .single();
+
     if (error || !data) throw new NotFoundException('Student profile not found');
     return data;
   }
@@ -18,9 +19,10 @@ export class StudentsService {
   async getById(id: string) {
     const { data, error } = await this.supabaseService.clientRef
       .from('students')
-      .select('*, users(email)')
+      .select('*, users(email, status, role)')
       .eq('id', id)
       .single();
+
     if (error || !data) throw new NotFoundException('Student not found');
     return data;
   }
