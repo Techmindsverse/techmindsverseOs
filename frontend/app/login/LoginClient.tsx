@@ -102,7 +102,7 @@ export default function LoginPage() {
 
         <p className="text-center text-white/30 text-sm mt-4">
           No account?{' '}
-          <Link href="/enroll" className="text-brand-blue hover:underline">
+          <Link href="/register" className="text-brand-blue hover:underline">
             Enroll in Academy
           </Link>
         </p>

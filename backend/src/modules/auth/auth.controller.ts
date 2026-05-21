@@ -5,6 +5,8 @@ import { LoginDto } from './dto/login.dto';
 import { ActivateDto } from './dto/activate.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { RegisterDto } from './dto/register.dto';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -12,6 +14,18 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Post('register')
+  @ApiOperation({ summary: 'Create a new account' })
+  register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto.email, dto.password, dto.fullName);
+  }
+
+  @Post('verify-otp')
+  @ApiOperation({ summary: 'Verify email OTP' })
+  verifyOtp(@Body() dto: VerifyOtpDto) {
+    return this.authService.verifyOtp(dto.email, dto.otp);
+  }
 
   @Post('login')
   @ApiOperation({ summary: 'Login with email and password' })

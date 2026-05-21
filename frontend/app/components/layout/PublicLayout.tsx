@@ -1,5 +1,7 @@
 import Navbar from './Navbar';
 import Footer from './Footer';
+import PWAInstall from '../PWAInstall';
+import MobileNav from '../MobileNav';
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -9,6 +11,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         {children}
       </main>
       <Footer />
+      <PWAInstall />
+      <MobileNav />
     </div>
   );
 }

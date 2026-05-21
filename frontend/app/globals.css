@@ -7,158 +7,114 @@
 :root {
   --brand-blue: #1A3BDB;
   --brand-purple: #6D28D9;
-  --brand-light: #ffffff;
-  --brand-soft: #f8f9ff;
-  --brand-border: #e6e8f0;
-  --text-dark: #0a0a0a;
-  --text-muted: #6b7280;
-
   --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-anticipate: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* DARK MODE (default) */
+:root, [data-theme="dark"] {
+  --bg-primary: #000000;
+  --bg-secondary: #0A0A0A;
+  --bg-card: #0d0d0d;
+  --border: rgba(255,255,255,0.07);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255,255,255,0.5);
+  --text-muted: rgba(255,255,255,0.2);
+  --scrollbar-track: #000;
+  --scrollbar-thumb: #1A3BDB;
 }
 
-html {
-  scroll-behavior: smooth;
+/* LIGHT MODE */
+[data-theme="light"] {
+  --bg-primary: #f8f9ff;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --border: rgba(0,0,0,0.08);
+  --text-primary: #0a0a0a;
+  --text-secondary: rgba(0,0,0,0.5);
+  --text-muted: rgba(0,0,0,0.3);
+  --scrollbar-track: #f0f0f0;
+  --scrollbar-thumb: #1A3BDB;
 }
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
 
 body {
   font-family: 'Outfit', sans-serif;
-  background-color: var(--brand-light);
-  color: var(--text-dark);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   overflow-x: hidden;
-
-  /* soft premium gradient */
-  background-image:
-    radial-gradient(circle at 20% 20%, rgba(26,59,219,0.08), transparent 35%),
-    radial-gradient(circle at 80% 80%, rgba(109,40,217,0.08), transparent 40%);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* =========================
-   TYPOGRAPHY
-========================= */
+.font-bebas { font-family: 'Bebas Neue', sans-serif; }
 
-.font-bebas {
-  font-family: 'Bebas Neue', sans-serif;
-}
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 2px; }
 
-/* =========================
-   SCROLLBAR
-========================= */
-
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #ffffff;
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #1A3BDB, #6D28D9);
-  border-radius: 10px;
-}
-
-/* =========================
-   LOGO SYSTEM (IMPORTANT)
-========================= */
-
-.logo-wrapper {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.4s var(--ease-smooth);
-}
-
-.logo-wrapper:hover {
-  transform: scale(1.08);
-}
-
-/* glowing aura behind logo */
-.logo-wrapper::before {
-  content: "";
-  position: absolute;
-  width: 140%;
-  height: 140%;
-  background: radial-gradient(circle,
-    rgba(26,59,219,0.25),
-    rgba(109,40,217,0.2),
-    transparent 70%
-  );
-  filter: blur(25px);
-  opacity: 0.6;
-  z-index: -1;
-  transition: opacity 0.4s ease;
-}
-
-.logo-wrapper:hover::before {
-  opacity: 1;
-}
-
-/* subtle float */
-@keyframes logoFloat {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-4px); }
-  100% { transform: translateY(0px); }
-}
-
-.logo-float {
-  animation: logoFloat 6s ease-in-out infinite;
-}
-
-/* =========================
-   BUTTON / GLOW SYSTEM
-========================= */
-
-.glow-brand {
-  box-shadow:
-    0 10px 25px rgba(26, 59, 219, 0.15),
-    0 0 40px rgba(109, 40, 217, 0.1);
-}
-
-/* =========================
-   CARD SYSTEM (LIGHT MODE)
-========================= */
-
-.card-hover {
-  background: #ffffff;
-  border: 1px solid var(--brand-border);
-  transition: all 0.35s var(--ease-smooth);
-}
-
-.card-hover:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 50px rgba(26, 59, 219, 0.12);
-  border-color: rgba(26, 59, 219, 0.3);
-}
-
-/* =========================
-   SHIMMER (UPDATED FOR LIGHT)
-========================= */
-
+/* Shimmer */
 @keyframes shimmer {
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }
 }
 
 .shimmer-text {
-  background: linear-gradient(
-    90deg,
-    #1A3BDB 0%,
-    #6D28D9 25%,
-    #1A3BDB 50%,
-    #6D28D9 75%,
-    #1A3BDB 100%
-  );
+  background: linear-gradient(90deg, #1A3BDB 0%, #6D28D9 25%, #1A3BDB 50%, #6D28D9 75%, #1A3BDB 100%);
   background-size: 200% auto;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: shimmer 4s linear infinite;
 }
+
+/* Glow pulse */
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(26,59,219,0); }
+  50% { box-shadow: 0 0 20px 4px rgba(26,59,219,0.3); }
+}
+.glow-pulse { animation: glowPulse 3s ease-in-out infinite; }
+
+/* Float */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+.float { animation: float 6s ease-in-out infinite; }
+.float-slow { animation: floatSlow 8s ease-in-out infinite; }
+
+/* Card hover */
+.card-hover {
+  transition: all 0.3s var(--ease-smooth);
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(26,59,219,0.3) !important;
+}
+
+/* Marquee */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee 30s linear infinite;
+  display: flex;
+  white-space: nowrap;
+}
+
+/* Light mode overrides for public pages */
+[data-theme="light"] .bg-black { background-color: var(--bg-primary) !important; }
+[data-theme="light"] .bg-brand-gray { background-color: var(--bg-secondary) !important; }
+[data-theme="light"] .text-white { color: var(--text-primary) !important; }
+[data-theme="light"] .text-white\/50 { color: var(--text-secondary) !important; }
+[data-theme="light"] .text-white\/30 { color: var(--text-muted) !important; }
+[data-theme="light"] .border-white\/5 { border-color: var(--border) !important; }
+[data-theme="light"] .border-white\/10 { border-color: var(--border) !important; }

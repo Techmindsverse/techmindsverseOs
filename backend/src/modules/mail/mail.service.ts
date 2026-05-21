@@ -150,4 +150,28 @@ export class MailService {
       throw err;
     }
   }
+  async sendOtpEmail(email: string, otp: string, name?: string) {
+  try {
+    await this.resend.emails.send({
+      from: this.from,
+      to: email,
+      subject: 'Verify Your TechMindsVerse Account',
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#000;color:#fff;padding:40px;">
+          <h2 style="color:#1A3BDB;">Welcome${name ? `, ${name}` : ''} 👋</h2>
+          <p style="color:#999;">Your verification code for TechMindsVerse OS:</p>
+          <div style="background:#0a0a0a;border:1px solid #1A3BDB;padding:24px;text-align:center;margin:24px 0;">
+            <span style="font-size:48px;font-weight:bold;letter-spacing:12px;color:#1A3BDB;">${otp}</span>
+          </div>
+          <p style="color:#666;font-size:13px;">This code expires in 15 minutes.</p>
+          <p style="color:#666;font-size:13px;">If you did not request this, ignore this email.</p>
+        </div>
+      `,
+    });
+    this.logger.log(`OTP email sent to ${email}`);
+  } catch (err) {
+    this.logger.error('Failed to send OTP email', err);
+    throw err;
+  }
+}
 }

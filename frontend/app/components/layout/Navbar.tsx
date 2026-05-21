@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { clsx } from 'clsx';
-
+import { ThemeToggle } from '@/app/components/ThemeProvider';
 const platformLinks = [
   { label: 'Academy', href: '/academy', desc: 'Learn real skills' },
   { label: 'Build Studio', href: '/build', desc: 'Build your product' },
@@ -142,10 +142,12 @@ export default function Navbar() {
 
           {/* CTA */}
           <div className="hidden lg:flex items-center gap-3">
+            <ThemeToggle />
             <Link
               href="/login"
               className="text-sm text-white/60 hover:text-white transition-colors"
             >
+              
               Sign In
             </Link>
             <Link
