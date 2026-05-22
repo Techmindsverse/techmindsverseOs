@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Download, X } from 'lucide-react';
+import { Download, Link, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function PWAInstall() {
@@ -53,11 +53,16 @@ export default function PWAInstall() {
           <div className="bg-black border border-brand-blue/30 p-5 shadow-2xl shadow-brand-blue/10">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-brand-blue rounded-sm flex items-center justify-center shrink-0">
-                  <span className="font-bebas text-white text-lg">T</span>
-                </div>
+                 {/* Logo */}
+          
+            <img
+              src="/logo.png"
+              alt="TechMindsVerse"
+              className="w-10 h-10 rounded-md hover:scale-110 transition-transform duration-300"
+            />
+            
                 <div>
-                  <p className="text-white font-semibold text-sm">Install TechMindsVerse</p>
+                  <p className="text-white font-semibold text-sm">Install TechMindsVerse OS</p>
                   <p className="text-white/40 text-xs">Use as an app on your device</p>
                 </div>
               </div>
