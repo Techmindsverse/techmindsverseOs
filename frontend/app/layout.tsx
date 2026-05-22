@@ -12,7 +12,16 @@ export const metadata: Metadata = {
   title: 'TechMindsVerse — Turning Ideas Into Real Digital Products',
   description: 'A unified tech ecosystem combining training, product building, and digital services.',
   manifest: '/manifest.json',
+
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/apple-icon.png',
+  },
+  
 };
+
+
 
 export const viewport: Viewport = {
   themeColor: '#1A3BDB',
