@@ -145,7 +145,15 @@ export default function AdminPage() {
     <div className="min-h-screen bg-black text-white flex">
 
       {/* SIDEBAR */}
-      <aside className="w-56 border-r border-white/5 flex flex-col justify-between py-6 px-4 sticky top-0 h-screen">
+      <aside className="
+  w-full md:w-56 shrink-0
+  border-b md:border-b-0 md:border-r border-white/5
+  md:sticky md:top-0 md:h-screen
+  flex md:flex-col justify-between
+  py-4 md:py-6 px-4
+  bg-black z-20
+  overflow-x-auto md:overflow-visible
+">
         <div>
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-1">
@@ -156,22 +164,22 @@ export default function AdminPage() {
             </div>
             <p className="text-white/20 text-xs pl-8">{user?.email}</p>
           </div>
-          <nav className="space-y-1">
-            {tabs.map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key as Tab)}
-                className={`flex items-center gap-2 w-full px-3 py-2 text-sm transition rounded-sm ${
-                  activeTab === tab.key
-                    ? 'bg-brand-blue/10 border border-brand-blue/30 text-white'
-                    : 'border border-transparent text-white/30 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <tab.icon size={13} />
-                {tab.label}
-              </button>
-            ))}
-          </nav>
+          <nav className="flex md:flex-col gap-1 md:space-y-1 overflow-x-auto md:overflow-visible pb-1 md:pb-0">
+  {tabs.map(tab => (
+    <button
+      key={tab.key}
+      onClick={() => setActiveTab(tab.key as Tab)}
+      className={`flex items-center gap-2 shrink-0 md:w-full px-3 py-2 text-sm transition rounded-sm whitespace-nowrap ${
+        activeTab === tab.key
+          ? 'bg-brand-blue/10 border border-brand-blue/30 text-white'
+          : 'border border-transparent text-white/30 hover:text-white hover:bg-white/5'
+      }`}
+    >
+      <tab.icon size={13} />
+      <span className="hidden md:inline">{tab.label}</span>
+    </button>
+  ))}
+</nav>
         </div>
         <button
           onClick={handleLogout}

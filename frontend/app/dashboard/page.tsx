@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/app/lib/api';
+import { Hammer } from 'lucide-react';
 import { useAuthStore } from '@/app/lib/store/auth.store';
 import {
   LogOut,
@@ -37,11 +38,11 @@ interface StudentProfile {
   users?: { email: string; status: string; role: string };
 }
 
-type Tab = 'overview' | 'payments' | 'projects' | 'complaints';
-
+type Tab = 'overview' | 'payments' | 'builds' | 'projects' | 'complaints';
 const tabs = [
   { key: 'overview', label: 'Overview', icon: Home },
   { key: 'payments', label: 'Payments', icon: CreditCard },
+  { key: 'builds', label: 'My Builds', icon: Hammer },
   { key: 'projects', label: 'Projects', icon: FolderOpen },
   { key: 'complaints', label: 'Support', icon: AlertCircle },
 ];
@@ -49,7 +50,7 @@ const tabs = [
 export default function DashboardPage() {
   const router = useRouter();
   const { user, clearAuth } = useAuthStore();
-
+  const [builds, setBuilds] = useState<any[]>([]);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,18 +85,19 @@ export default function DashboardPage() {
   }, []);
 
   const fetchData = async () => {
-    try {
-      const [profileRes, paymentsRes] = await Promise.all([
-        api.get('/students/me').catch(() => ({ data: null })),
-        api.get('/payments/my').catch(() => ({ data: [] })),
-      ]);
-
-      setProfile(profileRes.data);
-      setPayments(paymentsRes.data || []);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    const [profileRes, paymentsRes, buildsRes] = await Promise.all([
+      api.get('/students/me').catch(() => ({ data: null })),
+      api.get('/payments/my').catch(() => ({ data: [] })),
+      api.get('/build/my').catch(() => ({ data: [] })),
+    ]);
+    setProfile(profileRes.data);
+    setPayments(paymentsRes.data || []);
+    setBuilds(buildsRes.data || []);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleLogout = () => {
     clearAuth();
@@ -265,6 +267,58 @@ export default function DashboardPage() {
               </button>
             ))}
           </nav>
+
+          {/* BUILDS */}
+{activeTab === 'builds' && (
+  <div>
+    <div className="flex items-center justify-between mb-6">
+      <h2 className="font-bebas text-2xl text-white">MY BUILD REQUESTS</h2>
+      <Link href="/build" className="bg-brand-blue text-white text-sm px-4 py-2 hover:bg-blue-600 transition">
+        + New Build
+      </Link>
+    </div>
+    {builds.length === 0 ? (
+      <div className="border border-white/5 p-12 text-center">
+        <Hammer size={32} className="text-white/10 mx-auto mb-4" />
+        <p className="text-white/30 mb-4">No build requests yet.</p>
+        <Link href="/build" className="text-brand-blue text-sm hover:underline">
+          Submit your first build request →
+        </Link>
+      </div>
+    ) : (
+      <div className="space-y-3">
+        {builds.map((build: any) => (
+          <div key={build.id} className="border border-white/5 p-5 hover:border-white/10 transition">
+            <div className="flex items-start justify-between flex-wrap gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <p className="text-white font-medium">{build.name}</p>
+                  <span className="text-xs text-brand-blue border border-brand-blue/20 px-2 py-0.5 capitalize">{build.category}</span>
+                </div>
+                <p className="text-white/40 text-sm line-clamp-2">{build.description}</p>
+                {build.budget && <p className="text-white/20 text-xs mt-1">Budget: {build.budget}</p>}
+                {build.progress > 0 && (
+                  <div className="mt-3 max-w-xs">
+                    <div className="flex justify-between text-xs text-white/30 mb-1">
+                      <span>Progress</span><span>{build.progress}%</span>
+                    </div>
+                    <div className="w-full bg-white/5 h-1">
+                      <div className="h-1 bg-brand-blue" style={{ width: `${build.progress}%` }} />
+                    </div>
+                  </div>
+                )}
+                <p className="text-white/20 text-xs mt-2">{new Date(build.created_at).toLocaleDateString()}</p>
+              </div>
+              <span className={`text-xs border px-3 py-1 capitalize ${statusColor(build.status)}`}>
+                {build.status?.replace('_', ' ')}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
 
           {/* QUICK ACTIONS */}
           <div className="mt-6 space-y-1 hidden lg:block">

@@ -4,66 +4,160 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   DESIGN TOKENS
+   ============================================ */
 :root {
+  /* Brand */
   --brand-blue: #1A3BDB;
   --brand-purple: #6D28D9;
+
+  /* Easing */
   --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-}
 
-/* DARK MODE (default) */
-:root, [data-theme="dark"] {
+  /* Dark theme (default) */
   --bg-primary: #000000;
   --bg-secondary: #0A0A0A;
   --bg-card: #0d0d0d;
-  --border: rgba(255,255,255,0.07);
+  --bg-hover: rgba(255,255,255,0.03);
+  --border-default: rgba(255,255,255,0.07);
+  --border-hover: rgba(255,255,255,0.12);
   --text-primary: #ffffff;
   --text-secondary: rgba(255,255,255,0.5);
-  --text-muted: rgba(255,255,255,0.2);
+  --text-muted: rgba(255,255,255,0.25);
+  --text-faint: rgba(255,255,255,0.1);
   --scrollbar-track: #000;
   --scrollbar-thumb: #1A3BDB;
 }
 
-/* LIGHT MODE */
+/* Light theme tokens */
 [data-theme="light"] {
-  --bg-primary: #f8f9ff;
+  --bg-primary: #f4f6ff;
   --bg-secondary: #ffffff;
   --bg-card: #ffffff;
-  --border: rgba(0,0,0,0.08);
+  --bg-hover: rgba(0,0,0,0.03);
+  --border-default: rgba(0,0,0,0.08);
+  --border-hover: rgba(0,0,0,0.14);
   --text-primary: #0a0a0a;
-  --text-secondary: rgba(0,0,0,0.5);
-  --text-muted: rgba(0,0,0,0.3);
-  --scrollbar-track: #f0f0f0;
+  --text-secondary: rgba(0,0,0,0.55);
+  --text-muted: rgba(0,0,0,0.35);
+  --text-faint: rgba(0,0,0,0.15);
+  --scrollbar-track: #e8ebff;
   --scrollbar-thumb: #1A3BDB;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-html { scroll-behavior: smooth; }
+/* ============================================
+   RESET
+   ============================================ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 
 body {
   font-family: 'Outfit', sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   overflow-x: hidden;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.25s ease, color 0.25s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
 .font-bebas { font-family: 'Bebas Neue', sans-serif; }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 4px; }
+/* ============================================
+   SCROLLBAR
+   ============================================ */
+::-webkit-scrollbar { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
 ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 2px; }
 
-/* Shimmer */
+/* ============================================
+   LIGHT MODE — SEMANTIC OVERRIDES
+   Use CSS variables in components instead of
+   these overrides wherever possible.
+   ============================================ */
+[data-theme="light"] {
+  /* Backgrounds */
+  .bg-black { background-color: var(--bg-primary) !important; }
+  .bg-black\/80 { background-color: rgba(244,246,255,0.85) !important; }
+  .bg-black\/95 { background-color: rgba(244,246,255,0.97) !important; }
+  .bg-white\/5 { background-color: rgba(0,0,0,0.03) !important; }
+  .bg-white\/\[0\.01\] { background-color: rgba(0,0,0,0.01) !important; }
+  .bg-brand-gray { background-color: #eef0ff !important; }
+
+  /* Borders */
+  .border-white\/5 { border-color: rgba(0,0,0,0.06) !important; }
+  .border-white\/10 { border-color: rgba(0,0,0,0.09) !important; }
+  .border-white\/20 { border-color: rgba(0,0,0,0.13) !important; }
+
+  /* Text — ordered from most to least opaque */
+  .text-white { color: #0a0a0a !important; }
+  .text-white\/90 { color: rgba(10,10,10,0.9) !important; }
+  .text-white\/70 { color: rgba(10,10,10,0.7) !important; }
+  .text-white\/60 { color: rgba(10,10,10,0.6) !important; }
+  .text-white\/50 { color: rgba(10,10,10,0.5) !important; }
+  .text-white\/40 { color: rgba(10,10,10,0.4) !important; }
+  .text-white\/30 { color: rgba(10,10,10,0.3) !important; }
+  .text-white\/20 { color: rgba(10,10,10,0.2) !important; }
+
+  /* Gradient text fix */
+  .bg-gradient-to-b.from-white.to-brand-blue {
+    --tw-gradient-from: #0a0a0a;
+    --tw-gradient-to: var(--brand-blue);
+  }
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
 @keyframes shimmer {
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }
 }
 
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(26,59,219,0); }
+  50% { box-shadow: 0 0 24px 4px rgba(26,59,219,0.25); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.7; }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
 .shimmer-text {
-  background: linear-gradient(90deg, #1A3BDB 0%, #6D28D9 25%, #1A3BDB 50%, #6D28D9 75%, #1A3BDB 100%);
+  background: linear-gradient(
+    90deg,
+    #1A3BDB 0%, #6D28D9 25%,
+    #1A3BDB 50%, #6D28D9 75%, #1A3BDB 100%
+  );
   background-size: 200% auto;
   background-clip: text;
   -webkit-background-clip: text;
@@ -71,50 +165,33 @@ body {
   animation: shimmer 4s linear infinite;
 }
 
-/* Glow pulse */
-@keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(26,59,219,0); }
-  50% { box-shadow: 0 0 20px 4px rgba(26,59,219,0.3); }
-}
 .glow-pulse { animation: glowPulse 3s ease-in-out infinite; }
-
-/* Float */
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-12px); }
-}
-@keyframes floatSlow {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
-}
 .float { animation: float 6s ease-in-out infinite; }
-.float-slow { animation: floatSlow 8s ease-in-out infinite; }
+.float-slow { animation: floatSlow 9s ease-in-out infinite; }
+.pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
 
-/* Card hover */
+.marquee-track {
+  animation: marquee 28s linear infinite;
+  display: flex;
+  white-space: nowrap;
+  will-change: transform;
+}
+
 .card-hover {
-  transition: all 0.3s var(--ease-smooth);
+  transition: transform 0.3s var(--ease-smooth), border-color 0.3s ease;
 }
 .card-hover:hover {
   transform: translateY(-4px);
-  border-color: rgba(26,59,219,0.3) !important;
+  border-color: rgba(26,59,219,0.35) !important;
 }
 
-/* Marquee */
-@keyframes marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-.marquee-track {
-  animation: marquee 30s linear infinite;
-  display: flex;
-  white-space: nowrap;
+/* ============================================
+   MOBILE BOTTOM NAV SAFE AREA
+   ============================================ */
+.pb-mobile-nav {
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
 }
 
-/* Light mode overrides for public pages */
-[data-theme="light"] .bg-black { background-color: var(--bg-primary) !important; }
-[data-theme="light"] .bg-brand-gray { background-color: var(--bg-secondary) !important; }
-[data-theme="light"] .text-white { color: var(--text-primary) !important; }
-[data-theme="light"] .text-white\/50 { color: var(--text-secondary) !important; }
-[data-theme="light"] .text-white\/30 { color: var(--text-muted) !important; }
-[data-theme="light"] .border-white\/5 { border-color: var(--border) !important; }
-[data-theme="light"] .border-white\/10 { border-color: var(--border) !important; }
+@media (min-width: 1024px) {
+  .pb-mobile-nav { padding-bottom: 0; }
+}

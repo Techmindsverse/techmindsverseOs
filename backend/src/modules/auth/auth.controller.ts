@@ -15,11 +15,18 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('register')
-  @ApiOperation({ summary: 'Create a new account' })
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto.email, dto.password, dto.fullName);
-  }
+ @Post('register')
+register(@Body() dto: RegisterDto) {
+  return this.authService.register({
+    email: dto.email,
+    password: dto.password,
+    fullName: dto.fullName,
+    username: dto.username,
+    role: dto.role,
+    phone: dto.phone,
+    avatar_url: dto.avatar_url,
+  });
+}
 
   @Post('verify-otp')
   @ApiOperation({ summary: 'Verify email OTP' })

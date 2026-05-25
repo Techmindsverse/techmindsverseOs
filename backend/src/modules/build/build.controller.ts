@@ -7,6 +7,8 @@ import { BuildStatus } from './types/build-status.type';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { Get } from '@nestjs/common';
 
 @ApiTags('Build')
 @Controller('build')
@@ -45,4 +47,14 @@ export class BuildController {
   updateProgress(@Param('id') id: string, @Body() body: { progress: number }) {
     return this.buildService.updateProgress(id, body.progress);
   }
+  @Get('my')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@ApiOperation({ summary: 'Get my build requests by email' })
+getMyBuilds(@CurrentUser() user: any) {
+  return this.buildService.getMyBuilds(user.email);
 }
+
+}
+
+  

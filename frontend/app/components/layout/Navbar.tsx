@@ -15,6 +15,7 @@ const platformLinks = [
 ];
 
 const companyLinks = [
+  { label: 'Community', href: '/community' },
   { label: 'About', href: '/about' },
   { label: 'Team', href: '/team' },
   { label: 'Roadmap', href: '/roadmap' },

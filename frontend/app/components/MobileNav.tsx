@@ -10,6 +10,7 @@ const navItems = [
   { href: '/academy', icon: BookOpen, label: 'Academy' },
   { href: '/build', icon: Package, label: 'Build' },
   { href: '/dashboard', icon: User, label: 'Dashboard' },
+  { href: '/community', icon: Menu, label: 'Community' },
 ];
 
 export default function MobileNav() {

@@ -13,63 +13,101 @@ export class AuthService {
     private mailService: MailService,
   ) {}
 
-  async register(email: string, password: string, fullName: string) {
-    // Check if user exists
-    const { data: existing } = await this.supabaseService.clientRef
+    async register(dto: {
+  email: string;
+  password: string;
+  fullName: string;
+  username: string;
+  role: string;
+  phone?: string;
+  avatar_url?: string;
+}) {
+  // Check email exists
+  const { data: existingEmail } = await this.supabaseService.clientRef
+    .from('users')
+    .select('id, status')
+    .eq('email', dto.email)
+    .single();
+
+  if (existingEmail && existingEmail.status === 'active') {
+    throw new ConflictException('An account with this email already exists');
+  }
+
+  // Check username taken
+  const { data: existingUsername } = await this.supabaseService.clientRef
+    .from('users')
+    .select('id')
+    .eq('username', dto.username)
+    .single();
+
+  if (existingUsername) {
+    throw new ConflictException('Username is already taken');
+  }
+
+  const password_hash = await bcrypt.hash(dto.password, 12);
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otpExpiry = new Date();
+  otpExpiry.setMinutes(otpExpiry.getMinutes() + 15);
+
+  let userId: string;
+
+  if (existingEmail) {
+    userId = existingEmail.id;
+    await this.supabaseService.clientRef
       .from('users')
-      .select('id, status')
-      .eq('email', email)
+      .update({
+        password_hash,
+        username: dto.username,
+        otp_code: otp,
+        otp_expires_at: otpExpiry,
+      })
+      .eq('id', existingEmail.id);
+  } else {
+    const { data: newUser, error } = await this.supabaseService.clientRef
+      .from('users')
+      .insert({
+        email: dto.email,
+        password_hash,
+        username: dto.username,
+        role: dto.role,
+        status: 'pending',
+        otp_code: otp,
+        otp_expires_at: otpExpiry,
+        otp_verified: false,
+        avatar_url: dto.avatar_url || null,
+      })
+      .select('id')
       .single();
 
-    if (existing && existing.status === 'active') {
-      throw new ConflictException('An account with this email already exists');
-    }
+    if (error || !newUser) throw new BadRequestException('Failed to create account');
+    userId = newUser.id;
 
-    const password_hash = await bcrypt.hash(password, 12);
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiry = new Date();
-    otpExpiry.setMinutes(otpExpiry.getMinutes() + 15);
-
-    if (existing) {
-      // Resend OTP for existing unverified account
+    // Create profile based on role
+    if (dto.role === 'student') {
       await this.supabaseService.clientRef
-        .from('users')
-        .update({ otp_code: otp, otp_expires_at: otpExpiry, password_hash })
-        .eq('id', existing.id);
-    } else {
-      // Create new user
-      const { error } = await this.supabaseService.clientRef
-        .from('users')
+        .from('students')
         .insert({
-          email,
-          password_hash,
-          role: 'student',
-          status: 'pending',
-          otp_code: otp,
-          otp_expires_at: otpExpiry,
-          otp_verified: false,
+          user_id: userId,
+          full_name: dto.fullName,
+          phone: dto.phone || null,
+          avatar_url: dto.avatar_url || null,
         });
-
-      if (error) throw new BadRequestException('Failed to create account');
-
-      // Get the new user id
-      const { data: newUser } = await this.supabaseService.clientRef
-        .from('users')
-        .select('id')
-        .eq('email', email)
-        .single();
-
-      if (newUser && fullName) {
-        await this.supabaseService.clientRef
-          .from('students')
-          .insert({ user_id: newUser.id, full_name: fullName });
-      }
+    } else if (dto.role === 'client') {
+      await this.supabaseService.clientRef
+        .from('clients')
+        .insert({
+          user_id: userId,
+          full_name: dto.fullName,
+          phone: dto.phone || null,
+          avatar_url: dto.avatar_url || null,
+        });
     }
-
-    await this.mailService.sendOtpEmail(email, otp, fullName);
-
-    return { message: 'Account created. Check your email for the verification code.' };
   }
+
+  await this.mailService.sendOtpEmail(dto.email, otp, dto.fullName);
+
+  return { message: 'Account created. Check your email for the verification code.' };
+}
 
   async verifyOtp(email: string, otp: string) {
     const { data: user, error } = await this.supabaseService.clientRef

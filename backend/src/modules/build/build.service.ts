@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { CreateBuildDto } from './dto/create-build.dto';
@@ -157,6 +158,17 @@ export class BuildService {
       build: data,
     };
   }
+   
+  async getMyBuilds(email: string) {
+  const { data, error } = await this.supabaseService.clientRef
+    .from('builds')
+    .select('*')
+    .eq('email', email)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new NotFoundException('Failed to fetch builds');
+  return data;
+}
 
   // ==========================
   // FIND ALL
