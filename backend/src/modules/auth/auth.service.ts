@@ -91,8 +91,8 @@ export class AuthService {
         .eq('id', existing.id);
 
       await this.supabaseService.clientRef
-     .from('user_activities')
-     .insert({ user_id: newUser.id, action: 'OTP_SENT' });
+        .from('user_activities')
+        .insert({ user_id: existing.id, action: 'OTP_SENT' });
     } else {
       // Create new user
       const { data: newUser, error } = await this.supabaseService.clientRef
