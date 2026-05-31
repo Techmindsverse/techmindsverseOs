@@ -47,10 +47,12 @@ export class BuildController {
   updateProgress(@Param('id') id: string, @Body() body: { progress: number }) {
     return this.buildService.updateProgress(id, body.progress);
   }
-  @Get('my')
+  
+
+@Get('my')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@ApiOperation({ summary: 'Get my build requests by email' })
+@ApiOperation({ summary: 'Get my build requests' })
 getMyBuilds(@CurrentUser() user: any) {
   return this.buildService.getMyBuilds(user.email);
 }

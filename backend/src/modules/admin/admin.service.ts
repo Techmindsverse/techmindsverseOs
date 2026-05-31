@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { MailService } from '../mail/mail.service';
 import { AuthService } from '../auth/auth.service';
@@ -7,41 +11,92 @@ import { AdminNoteDto } from './dto/admin-note.dto';
 @Injectable()
 export class AdminService {
   constructor(
-    private supabaseService: SupabaseService,
-    private mailService: MailService,
-    private authService: AuthService,
+    private readonly supabaseService: SupabaseService,
+    private readonly mailService: MailService,
+    private readonly authService: AuthService,
   ) {}
 
+  // ─────────────────────────────────────────
+  // METRICS
+  // ─────────────────────────────────────────
   async getMetrics() {
-    const [users, students, payments, builds, complaints, projects] = await Promise.all([
-      this.supabaseService.clientRef.from('users').select('id, role, status', { count: 'exact' }),
-      this.supabaseService.clientRef.from('students').select('id', { count: 'exact' }),
-      this.supabaseService.clientRef.from('payments').select('id, status, amount'),
-      this.supabaseService.clientRef.from('builds').select('id, status'),
-      this.supabaseService.clientRef.from('complaints').select('id, status', { count: 'exact' }),
-      this.supabaseService.clientRef.from('projects').select('id', { count: 'exact' }),
-    ]);
+    const [users, students, payments, builds, complaints, projects] =
+      await Promise.all([
+        this.supabaseService.clientRef
+          .from('users')
+          .select('id, role, status', { count: 'exact' }),
+        this.supabaseService.clientRef
+          .from('students')
+          .select('id', { count: 'exact' }),
+        this.supabaseService.clientRef
+          .from('payments')
+          .select('id, status, amount'),
+        this.supabaseService.clientRef
+          .from('builds')
+          .select('id, status'),
+        this.supabaseService.clientRef
+          .from('complaints')
+          .select('id, status', { count: 'exact' }),
+        this.supabaseService.clientRef
+          .from('projects')
+          .select('id', { count: 'exact' }),
+      ]);
 
     const p = payments.data || [];
     const b = builds.data || [];
-    const c = complaints.data || [];
 
     return {
       total_users: users.count || 0,
       active_students: students.count || 0,
-      pending_payments: p.filter(x => x.status === 'pending').length,
-      approved_payments: p.filter(x => x.status === 'approved').length,
+      pending_payments: p.filter((x) => x.status === 'pending').length,
+      approved_payments: p.filter((x) => x.status === 'approved').length,
       total_revenue: p
-        .filter(x => x.status === 'approved')
+        .filter((x) => x.status === 'approved')
         .reduce((acc, x) => acc + (Number(x.amount) || 0), 0),
-      active_builds: b.filter(x => ['accepted', 'in_progress'].includes(x.status)).length,
-      completed_builds: b.filter(x => x.status === 'completed').length,
-      pending_builds: b.filter(x => x.status === 'pending').length,
-      open_complaints: c.filter(x => x.status === 'pending').length,
+      active_builds: b.filter((x) =>
+        ['reviewing', 'planning', 'in_progress', 'testing'].includes(x.status),
+      ).length,
+      completed_builds: b.filter((x) =>
+        ['completed', 'delivered'].includes(x.status),
+      ).length,
+      pending_builds: b.filter((x) => x.status === 'submitted').length,
+      open_complaints: complaints.count || 0,
       total_projects: projects.count || 0,
     };
   }
 
+  // ─────────────────────────────────────────
+  // PUBLIC STATS
+  // ─────────────────────────────────────────
+  async getPublicStats() {
+    const [users, students, builds, completedBuilds] = await Promise.all([
+      this.supabaseService.clientRef
+        .from('users')
+        .select('id', { count: 'exact' })
+        .eq('status', 'active'),
+      this.supabaseService.clientRef
+        .from('students')
+        .select('id', { count: 'exact' }),
+      this.supabaseService.clientRef
+        .from('builds')
+        .select('id', { count: 'exact' }),
+      this.supabaseService.clientRef
+        .from('builds')
+        .select('id', { count: 'exact' })
+        .in('status', ['completed', 'delivered']),
+    ]);
+
+    return {
+      active_users: users.count || 0,
+      total_students: students.count || 0,
+      total_builds: builds.count || 0,
+      completed_builds: completedBuilds.count || 0,
+    };
+  }
+
+  // ─────────────────────────────────────────
+  // ACTIVITY
+  // ─────────────────────────────────────────
   async getActivity(page = 1, limit = 20) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -56,13 +111,18 @@ export class AdminService {
     return { data, total: count, page, limit };
   }
 
+  // ─────────────────────────────────────────
+  // PAYMENTS
+  // ─────────────────────────────────────────
   async getAllPayments(page = 1, limit = 20) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
     const { data, error, count } = await this.supabaseService.clientRef
       .from('payments')
-      .select('*, users(id, email, role, status), courses(title)', { count: 'exact' })
+      .select('*, users(id, email, role, status), courses(title)', {
+        count: 'exact',
+      })
       .order('created_at', { ascending: false })
       .range(from, to);
 
@@ -79,26 +139,22 @@ export class AdminService {
 
     if (error || !payment) throw new NotFoundException('Payment not found');
 
-    // Admin exemption — skip activation flow
     if (payment.users.role === 'admin') {
       await this.supabaseService.clientRef
         .from('payments')
         .update({ status: 'approved', admin_note: 'Admin account exempted' })
         .eq('id', paymentId);
-
       return { message: 'Admin account exempted from activation flow.' };
     }
 
-    // Approve payment
     await this.supabaseService.clientRef
       .from('payments')
       .update({ status: 'approved', admin_note: dto.admin_note ?? null })
       .eq('id', paymentId);
 
-    // Generate activation token
-    const { rawToken, hashedToken, expiresAt } = this.authService.generateActivationToken();
+    const { rawToken, hashedToken, expiresAt } =
+      this.authService.generateActivationToken();
 
-    // Update user
     await this.supabaseService.clientRef
       .from('users')
       .update({
@@ -109,17 +165,13 @@ export class AdminService {
       })
       .eq('id', payment.user_id);
 
-    // Send activation email
     await this.mailService.sendActivationEmail(payment.users.email, rawToken);
 
-    // Log activity
-    await this.supabaseService.clientRef
-      .from('user_activities')
-      .insert({
-        user_id: payment.user_id,
-        action: 'PAYMENT_APPROVED',
-        metadata: { payment_id: paymentId },
-      });
+    await this.supabaseService.clientRef.from('user_activities').insert({
+      user_id: payment.user_id,
+      action: 'PAYMENT_APPROVED',
+      metadata: { payment_id: paymentId },
+    });
 
     return { message: 'Payment approved. Activation email sent.' };
   }
@@ -134,6 +186,9 @@ export class AdminService {
     return { message: 'Payment rejected.' };
   }
 
+  // ─────────────────────────────────────────
+  // STUDENTS
+  // ─────────────────────────────────────────
   async getAllStudents(page = 1, limit = 20) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -148,6 +203,9 @@ export class AdminService {
     return { data, total: count, page, limit };
   }
 
+  // ─────────────────────────────────────────
+  // PROJECTS
+  // ─────────────────────────────────────────
   async getAllProjects(page = 1, limit = 20) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -162,6 +220,9 @@ export class AdminService {
     return { data, total: count, page, limit };
   }
 
+  // ─────────────────────────────────────────
+  // COMPLAINTS
+  // ─────────────────────────────────────────
   async getAllComplaints(page = 1, limit = 20) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -176,6 +237,9 @@ export class AdminService {
     return { data, total: count, page, limit };
   }
 
+  // ─────────────────────────────────────────
+  // CONTACTS
+  // ─────────────────────────────────────────
   async getAllContacts(page = 1, limit = 20) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -190,6 +254,9 @@ export class AdminService {
     return { data, total: count, page, limit };
   }
 
+  // ─────────────────────────────────────────
+  // BUILDS
+  // ─────────────────────────────────────────
   async getAllBuilds(page = 1, limit = 20) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -202,5 +269,130 @@ export class AdminService {
 
     if (error) throw new NotFoundException('Failed to fetch builds');
     return { data, total: count, page, limit };
+  }
+
+  // ─────────────────────────────────────────
+  // ANNOUNCEMENTS
+  // ─────────────────────────────────────────
+  async getAnnouncements(limit = 10) {
+    const { data } = await this.supabaseService.clientRef
+      .from('announcements')
+      .select('*')
+      .eq('status', 'active')
+      .order('pinned', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    return data || [];
+  }
+
+  async createAnnouncement(
+    dto: {
+      title: string;
+      content: string;
+      type: string;
+      pinned?: boolean;
+    },
+    adminId: string,
+  ) {
+    const { data, error } = await this.supabaseService.clientRef
+      .from('announcements')
+      .insert({
+        title: dto.title,
+        content: dto.content,
+        type: dto.type,
+        pinned: dto.pinned || false,
+        status: 'active',
+        author_id: adminId,
+      })
+      .select()
+      .single();
+
+    if (error) throw new BadRequestException('Failed to create announcement');
+    return data;
+  }
+
+  // ─────────────────────────────────────────
+  // TESTIMONIALS
+  // ─────────────────────────────────────────
+  async getTestimonials() {
+    const { data } = await this.supabaseService.clientRef
+      .from('testimonials')
+      .select('*')
+      .eq('is_active', true)
+      .order('order_index', { ascending: true });
+
+    return data || [];
+  }
+
+  async manageTestimonial(dto: {
+    id?: string;
+    name: string;
+    role: string;
+    text: string;
+    avatar_initial?: string;
+    is_active?: boolean;
+    order_index?: number;
+  }) {
+    if (dto.id) {
+      const { data, error } = await this.supabaseService.clientRef
+        .from('testimonials')
+        .update({
+          name: dto.name,
+          role: dto.role,
+          text: dto.text,
+          avatar_initial: dto.avatar_initial,
+          is_active: dto.is_active !== undefined ? dto.is_active : true,
+          order_index: dto.order_index || 0,
+        })
+        .eq('id', dto.id)
+        .select()
+        .single();
+
+      if (error) throw new BadRequestException('Failed to update testimonial');
+      return data;
+    }
+
+    const { data, error } = await this.supabaseService.clientRef
+      .from('testimonials')
+      .insert({
+        name: dto.name,
+        role: dto.role,
+        text: dto.text,
+        avatar_initial: dto.avatar_initial || dto.name[0],
+        is_active: true,
+        order_index: dto.order_index || 0,
+      })
+      .select()
+      .single();
+
+    if (error) throw new BadRequestException('Failed to create testimonial');
+    return data;
+  }
+
+  // ─────────────────────────────────────────
+  // PLATFORM STATS
+  // ─────────────────────────────────────────
+  async getPlatformStats() {
+    const { data } = await this.supabaseService.clientRef
+      .from('platform_stats')
+      .select('*')
+      .order('key');
+
+    return data || [];
+  }
+
+  async updatePlatformStat(key: string, value: string, label: string) {
+    const { data, error } = await this.supabaseService.clientRef
+      .from('platform_stats')
+      .upsert(
+        { key, value, label, updated_at: new Date().toISOString() },
+        { onConflict: 'key' },
+      )
+      .select()
+      .single();
+
+    if (error) throw new BadRequestException('Failed to update stat');
+    return data;
   }
 }

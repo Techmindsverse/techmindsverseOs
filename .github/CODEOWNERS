@@ -1,0 +1,16 @@
+# Backend architecture — Sheddy reviews all changes
+/backend/src/modules/auth/   @SheddyDeCoder
+/backend/src/modules/admin/  @SheddyDeCoder
+/backend/src/common/         @SheddyDeCoder
+/backend/src/app.module.ts   @SheddyDeCoder
+
+# Frontend core — Sheddy reviews
+/frontend/app/lib/           @SheddyDeCoder
+/frontend/app/middleware.ts  @SheddyDeCoder
+/frontend/app/layout.tsx     @SheddyDeCoder
+
+# Team can own feature modules independently
+/frontend/app/academy/
+/frontend/app/community/
+/backend/src/modules/courses/
+/backend/src/modules/community/

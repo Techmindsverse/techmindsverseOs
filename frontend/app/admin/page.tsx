@@ -7,10 +7,12 @@ import { useAuthStore } from '@/app/lib/store/auth.store';
 import {
   LogOut, LayoutDashboard, CreditCard, Users,
   FolderOpen, AlertCircle, MessageSquare, Package,
-  Activity, CheckCircle, XCircle, ChevronRight, RefreshCw
+  Activity, CheckCircle, XCircle, ChevronRight, RefreshCw,
+  Bell,
+  Star
 } from 'lucide-react';
 
-type Tab = 'overview' | 'payments' | 'students' | 'projects' | 'complaints' | 'contacts' | 'builds' | 'activity';
+type Tab = 'overview' | 'payments' | 'students' | 'projects' | 'complaints' | 'contacts' | 'builds' | 'activity' | 'announcements' | 'content';
 
 interface Metrics {
   total_users: number;
@@ -45,6 +47,9 @@ export default function AdminPage() {
     { key: 'contacts', label: 'Contacts', icon: MessageSquare },
     { key: 'builds', label: 'Builds', icon: Package },
     { key: 'activity', label: 'Activity', icon: Activity },
+    { key: 'announcements', label: 'Announcements', icon: Bell },
+    { key: 'content', label: 'Content', icon: Star },
+
   ];
 
   const endpointMap: Record<Tab, string> = {
@@ -56,7 +61,14 @@ export default function AdminPage() {
     contacts: '/admin/contacts',
     builds: '/admin/builds',
     activity: '/admin/activity',
+    announcements: '',
+    content: ''
   };
+
+   const [announcementForm, setAnnouncementForm] = useState({ title: '', content: '', type: 'update', pinned: false });
+   const [testimonialForm, setTestimonialForm] = useState({ name: '', role: '', text: '', avatar_initial: '' });
+   const [formLoading, setFormLoading] = useState(false);
+
 
   useEffect(() => {
     const token = localStorage.getItem('tmv_token');
@@ -117,6 +129,28 @@ export default function AdminPage() {
       fetchTab('builds');
     } catch { alert('Failed to update progress'); }
   };
+   
+   const handleCreateAnnouncement = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setFormLoading(true);
+  try {
+    await api.post('/admin/announcements', announcementForm);
+    setAnnouncementForm({ title: '', content: '', type: 'update', pinned: false });
+    alert('Announcement created');
+  } catch { alert('Failed to create announcement'); }
+  finally { setFormLoading(false); }
+};
+
+const handleCreateTestimonial = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setFormLoading(true);
+  try {
+    await api.post('/admin/testimonials', testimonialForm);
+    setTestimonialForm({ name: '', role: '', text: '', avatar_initial: '' });
+    alert('Testimonial saved');
+  } catch { alert('Failed to save testimonial'); }
+  finally { setFormLoading(false); }
+};
 
   const openBuildDetail = async (build: any) => {
     setSelectedBuild(build);
@@ -213,6 +247,87 @@ export default function AdminPage() {
             </div>
           ) : (
             <>
+
+              {/* ANNOUNCEMENTS */}
+{activeTab === 'announcements' && (
+  <div className="max-w-2xl space-y-8">
+    <div>
+      <h2 className="font-bebas text-2xl text-white mb-5">CREATE ANNOUNCEMENT</h2>
+      <form onSubmit={handleCreateAnnouncement} className="space-y-4">
+        <div>
+          <label className="text-white/50 text-xs block mb-1.5">Title *</label>
+          <input type="text" required value={announcementForm.title}
+            onChange={e => setAnnouncementForm({...announcementForm, title: e.target.value})}
+            className="w-full bg-white/5 border border-white/10 text-white px-4 py-3 text-sm focus:outline-none focus:border-brand-blue transition" />
+        </div>
+        <div>
+          <label className="text-white/50 text-xs block mb-1.5">Content *</label>
+          <textarea required rows={4} value={announcementForm.content}
+            onChange={e => setAnnouncementForm({...announcementForm, content: e.target.value})}
+            className="w-full bg-white/5 border border-white/10 text-white px-4 py-3 text-sm focus:outline-none focus:border-brand-blue transition resize-none" />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-white/50 text-xs block mb-1.5">Type</label>
+            <select value={announcementForm.type}
+              onChange={e => setAnnouncementForm({...announcementForm, type: e.target.value})}
+              className="w-full bg-black border border-white/10 text-white px-4 py-3 text-sm focus:outline-none focus:border-brand-blue transition">
+              {['update', 'launch', 'event', 'opportunity', 'hackathon', 'academy', 'community'].map(t => (
+                <option key={t} value={t} className="bg-black capitalize">{t}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-3 pt-6">
+            <input type="checkbox" id="pinned" checked={announcementForm.pinned}
+              onChange={e => setAnnouncementForm({...announcementForm, pinned: e.target.checked})}
+              className="w-4 h-4" />
+            <label htmlFor="pinned" className="text-white/50 text-sm">Pin to top</label>
+          </div>
+        </div>
+        <button type="submit" disabled={formLoading}
+          className="bg-brand-blue text-white px-7 py-3 text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50">
+          {formLoading ? 'Creating...' : 'Create Announcement'}
+        </button>
+      </form>
+    </div>
+  </div>
+)}
+
+{/* CONTENT MANAGEMENT */}
+{activeTab === 'content' && (
+  <div className="max-w-2xl space-y-8">
+    <div>
+      <h2 className="font-bebas text-2xl text-white mb-5">ADD TESTIMONIAL</h2>
+      <form onSubmit={handleCreateTestimonial} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-white/50 text-xs block mb-1.5">Name *</label>
+            <input type="text" required value={testimonialForm.name}
+              onChange={e => setTestimonialForm({...testimonialForm, name: e.target.value, avatar_initial: e.target.value[0] || ''})}
+              className="w-full bg-white/5 border border-white/10 text-white px-4 py-3 text-sm focus:outline-none focus:border-brand-blue transition" />
+          </div>
+          <div>
+            <label className="text-white/50 text-xs block mb-1.5">Role *</label>
+            <input type="text" required value={testimonialForm.role}
+              onChange={e => setTestimonialForm({...testimonialForm, role: e.target.value})}
+              placeholder="Student / Client / Builder"
+              className="w-full bg-white/5 border border-white/10 text-white px-4 py-3 text-sm focus:outline-none focus:border-brand-blue transition" />
+          </div>
+        </div>
+        <div>
+          <label className="text-white/50 text-xs block mb-1.5">Testimonial Text *</label>
+          <textarea required rows={3} value={testimonialForm.text}
+            onChange={e => setTestimonialForm({...testimonialForm, text: e.target.value})}
+            className="w-full bg-white/5 border border-white/10 text-white px-4 py-3 text-sm focus:outline-none focus:border-brand-blue transition resize-none" />
+        </div>
+        <button type="submit" disabled={formLoading}
+          className="bg-brand-blue text-white px-7 py-3 text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50">
+          {formLoading ? 'Saving...' : 'Save Testimonial'}
+        </button>
+      </form>
+    </div>
+  </div>
+)}
 
               {/* OVERVIEW */}
               {activeTab === 'overview' && metrics && (

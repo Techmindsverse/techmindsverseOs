@@ -7,39 +7,52 @@ import { SupabaseService } from '../supabase/supabase.service';
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    private configService: ConfigService,
-    private supabaseService: SupabaseService,
+    private readonly configService: ConfigService,
+    private readonly supabaseService: SupabaseService,
   ) {
-    const jwtSecret = configService.get<string>('JWT_SECRET');
-
-    if (!jwtSecret) {
-      throw new Error('JWT_SECRET is missing in environment variables');
-    }
+    const secret = configService.get<string>('JWT_SECRET');
+    if (!secret) throw new Error('JWT_SECRET missing');
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: jwtSecret,
+      secretOrKey: secret,
     });
   }
 
- async validate(payload: any) {
-  const { data, error } = await this.supabaseService.clientRef
-    .from('users')
-    .select('id, email, role, status')
-    .eq('id', payload.sub)
-    .single();
+  async validate(payload: any) {
+    // Load user with roles and active modules in one query
+    const { data: user, error } = await this.supabaseService.clientRef
+      .from('users')
+      .select(`
+        id, email, role, roles, status, is_verified,
+        module_memberships!inner(module, status)
+      `)
+      .eq('id', payload.sub)
+      .single();
 
-  if (error || !data) throw new UnauthorizedException('User not found');
+    if (error || !user) throw new UnauthorizedException('User not found');
 
-  // Admin always allowed
-  if (data.role === 'admin') {
-    return { id: data.id, email: data.email, role: data.role, status: data.status };
+    const userRoles: string[] = user.roles || [user.role] || ['member'];
+    const isPrivileged =
+      userRoles.includes('admin') || userRoles.includes('super_admin');
+
+    if (!isPrivileged && user.status !== 'active') {
+      throw new UnauthorizedException('Account is not active');
+    }
+
+    const activeModules = ((user as any).module_memberships || [])
+      .filter((m: any) => m.status === 'active')
+      .map((m: any) => m.module);
+
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      roles: userRoles,
+      status: user.status,
+      is_verified: user.is_verified,
+      modules: activeModules,
+    };
   }
-
-  if (data.status !== 'active') {
-    throw new UnauthorizedException('Account is not active');
-  }
-
-  return { id: data.id, email: data.email, role: data.role, status: data.status };
-}}
+}

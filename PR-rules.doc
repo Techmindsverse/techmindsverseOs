@@ -1,0 +1,17 @@
+Branch naming:
+  feature/academy-course-cards
+  fix/otp-rate-limit
+  chore/update-dependencies
+
+Commit format:
+  feat: add course enrollment endpoint
+  fix: resolve OTP expiry check
+  chore: update Resend package
+  docs: add API documentation
+
+Review rules:
+  - 1 approval required for feature branches
+  - 2 approvals required for anything touching auth/
+  - Sheddy must approve anything in CODEOWNERS
+  - No self-merges
+  - CI must pass

@@ -22,4 +22,10 @@ export class StudentsController {
   getById(@Param('id') id: string) {
     return this.studentsService.getById(id);
   }
+
+  @Get('me/enrollments')
+@ApiOperation({ summary: 'Get my enrolled courses' })
+getMyEnrollments(@CurrentUser() user: any) {
+  return this.studentsService.getEnrollments(user.id);
+}
 }

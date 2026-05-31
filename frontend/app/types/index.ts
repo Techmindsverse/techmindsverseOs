@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'student' | 'instructor';
+export type UserRole = 'super_admin' | 'admin' | 'student' | 'instructor' | 'builder' | 'client';
 export type UserStatus = 'pending' | 'active' | 'suspended';
 export type PaymentStatus = 'pending' | 'approved' | 'rejected';
 export type ProjectStatus = 'submitted' | 'reviewed' | 'approved' | 'rejected';

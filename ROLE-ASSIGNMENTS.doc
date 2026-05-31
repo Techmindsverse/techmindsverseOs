@@ -1,0 +1,22 @@
+SheddyDeCoder ( CEO + Architect):
+  - Architecture decisions
+  - Auth + Security review
+  - PR approval for core files
+  - Product roadmap
+  - Not coding day-to-day anymore
+
+Backend Developer:
+  - New NestJS modules
+  - API endpoints
+  - Database queries
+  - Must follow existing patterns in auth.service.ts
+
+Frontend Developer:
+  - New pages + components
+  - Must use design system from dashboard
+  - Must use useAuthStore for all auth state
+  - No direct Supabase calls — all through /api/v1
+
+Full-Stack (if available):
+  - Feature ownership end-to-end
+  - academy module, community module

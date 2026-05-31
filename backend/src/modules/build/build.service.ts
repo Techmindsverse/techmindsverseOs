@@ -159,7 +159,7 @@ export class BuildService {
     };
   }
    
-  async getMyBuilds(email: string) {
+ async getMyBuilds(email: string) {
   const { data, error } = await this.supabaseService.clientRef
     .from('builds')
     .select('*')
@@ -167,7 +167,7 @@ export class BuildService {
     .order('created_at', { ascending: false });
 
   if (error) throw new NotFoundException('Failed to fetch builds');
-  return data;
+  return data || [];
 }
 
   // ==========================
@@ -269,5 +269,7 @@ export class BuildService {
       min: Number(numbers[0]),
       max: numbers[1] ? Number(numbers[1]) : Number(numbers[0]),
     };
+
+    
   }
 }

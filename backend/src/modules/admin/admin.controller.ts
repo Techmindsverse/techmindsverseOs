@@ -1,5 +1,20 @@
-import { Controller, Get, Patch, Param, Body, UseGuards, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Param,
+  Body,
+  UseGuards,
+  Query,
+  Req,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
+import { Request } from 'express';
 import { AdminService } from './admin.service';
 import { AdminNoteDto } from './dto/admin-note.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -22,55 +37,109 @@ export class AdminController {
 
   @Get('activity')
   @ApiOperation({ summary: 'Get system activity feed' })
-  getActivity(@Query('page') page = 1, @Query('limit') limit = 20) {
+  getActivity(
+    @Query('page') page = 1,
+    @Query('limit') limit = 20,
+  ) {
     return this.adminService.getActivity(+page, +limit);
   }
 
   @Get('payments')
   @ApiOperation({ summary: 'Get all payments' })
-  getAllPayments(@Query('page') page = 1, @Query('limit') limit = 20) {
+  getAllPayments(
+    @Query('page') page = 1,
+    @Query('limit') limit = 20,
+  ) {
     return this.adminService.getAllPayments(+page, +limit);
   }
 
   @Patch('payments/:id/approve')
   @ApiOperation({ summary: 'Approve a payment' })
-  approvePayment(@Param('id') id: string, @Body() dto: AdminNoteDto) {
+  approvePayment(
+    @Param('id') id: string,
+    @Body() dto: AdminNoteDto,
+  ) {
     return this.adminService.approvePayment(id, dto);
   }
 
   @Patch('payments/:id/reject')
   @ApiOperation({ summary: 'Reject a payment' })
-  rejectPayment(@Param('id') id: string, @Body() dto: AdminNoteDto) {
+  rejectPayment(
+    @Param('id') id: string,
+    @Body() dto: AdminNoteDto,
+  ) {
     return this.adminService.rejectPayment(id, dto);
   }
 
   @Get('students')
   @ApiOperation({ summary: 'Get all students' })
-  getAllStudents(@Query('page') page = 1, @Query('limit') limit = 20) {
+  getAllStudents(
+    @Query('page') page = 1,
+    @Query('limit') limit = 20,
+  ) {
     return this.adminService.getAllStudents(+page, +limit);
   }
 
   @Get('projects')
   @ApiOperation({ summary: 'Get all projects' })
-  getAllProjects(@Query('page') page = 1, @Query('limit') limit = 20) {
+  getAllProjects(
+    @Query('page') page = 1,
+    @Query('limit') limit = 20,
+  ) {
     return this.adminService.getAllProjects(+page, +limit);
   }
 
   @Get('complaints')
   @ApiOperation({ summary: 'Get all complaints' })
-  getAllComplaints(@Query('page') page = 1, @Query('limit') limit = 20) {
+  getAllComplaints(
+    @Query('page') page = 1,
+    @Query('limit') limit = 20,
+  ) {
     return this.adminService.getAllComplaints(+page, +limit);
   }
 
   @Get('contacts')
   @ApiOperation({ summary: 'Get all contacts' })
-  getAllContacts(@Query('page') page = 1, @Query('limit') limit = 20) {
+  getAllContacts(
+    @Query('page') page = 1,
+    @Query('limit') limit = 20,
+  ) {
     return this.adminService.getAllContacts(+page, +limit);
   }
 
   @Get('builds')
   @ApiOperation({ summary: 'Get all build requests' })
-  getAllBuilds(@Query('page') page = 1, @Query('limit') limit = 20) {
+  getAllBuilds(
+    @Query('page') page = 1,
+    @Query('limit') limit = 20,
+  ) {
     return this.adminService.getAllBuilds(+page, +limit);
+  }
+
+  @Post('announcements')
+  @ApiOperation({ summary: 'Create announcement' })
+  createAnnouncement(
+    @Body() dto: any,
+    @Req() req: Request & { user: any },
+  ) {
+    return this.adminService.createAnnouncement(dto, req.user.id);
+  }
+
+  @Post('testimonials')
+  @ApiOperation({ summary: 'Manage testimonials' })
+  manageTestimonial(@Body() dto: any) {
+    return this.adminService.manageTestimonial(dto);
+  }
+
+  @Patch('platform-stats')
+  @ApiOperation({ summary: 'Update platform stat' })
+  updateStat(
+    @Body() dto: { key: string; value: string; label: string },
+  ) {
+    return this.adminService.updatePlatformStat(
+      dto.key,
+      dto.value,
+      dto.label,
+    );
   }
 }
