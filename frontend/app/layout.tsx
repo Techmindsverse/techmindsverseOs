@@ -3,6 +3,7 @@ import { Outfit } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/app/components/ThemeProvider';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import AuthHydrator from '@/app/components/AuthHydrator';
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -70,6 +71,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-black text-white antialiased min-h-full flex flex-col">
         <ThemeProvider>
+          <AuthHydrator />
           {children}
         </ThemeProvider>
         <SpeedInsights />

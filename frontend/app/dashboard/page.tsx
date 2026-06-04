@@ -789,7 +789,7 @@ function ClientDashboard({ user, profile, builds }: {
 /* ── MAIN EXPORT ── */
 export default function DashboardPage() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user, isHydrated } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
   const [clientProfile, setClientProfile] = useState<ClientProfile | null>(null);
@@ -797,15 +797,20 @@ export default function DashboardPage() {
   const [builds, setBuilds] = useState<Build[]>([]);
 
   useEffect(() => {
+    // Wait for store hydration before checking token
+    if (!isHydrated) return;
+
     const token = localStorage.getItem('tmv_token');
-    if (!token) { router.push('/login'); return; }
+    if (!token) {
+      router.push('/login');
+      return;
+    }
     loadDashboard();
-  }, []);
+  }, [isHydrated]);
 
   const loadDashboard = async () => {
     try {
       const role = user?.role;
-
       const [paymentsRes, buildsRes] = await Promise.all([
         api.get('/payments/my').catch(() => ({ data: [] as any[] })),
         api.get('/build/my').catch(() => ({ data: [] as any[] })),
@@ -836,6 +841,17 @@ export default function DashboardPage() {
       </div>
     );
   }
+  
+    if (!isHydrated || loading) {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-10 h-10 border-2 border-[#1A3BDB] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-gray-400 text-sm">Loading dashboard...</p>
+      </div>
+    </div>
+  );
+}
 
   if (user?.role === 'client') {
     return <ClientDashboard user={user} profile={clientProfile} builds={builds} />;

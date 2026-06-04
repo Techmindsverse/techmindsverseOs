@@ -11,7 +11,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly supabaseService: SupabaseService,
   ) {
     const secret = configService.get<string>('JWT_SECRET');
-    if (!secret) throw new Error('JWT_SECRET missing');
+    if (!secret) throw new Error('JWT_SECRET is missing');
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -21,29 +21,40 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    // Load user with roles and active modules in one query
+    // Step 1: Load user
     const { data: user, error } = await this.supabaseService.clientRef
       .from('users')
-      .select(`
-        id, email, role, roles, status, is_verified,
-        module_memberships!inner(module, status)
-      `)
+      .select('id, email, role, roles, status, is_verified')
       .eq('id', payload.sub)
       .single();
 
-    if (error || !user) throw new UnauthorizedException('User not found');
+    if (error || !user) {
+      throw new UnauthorizedException('User not found');
+    }
 
     const userRoles: string[] = user.roles || [user.role] || ['member'];
     const isPrivileged =
       userRoles.includes('admin') || userRoles.includes('super_admin');
 
+    // Privileged roles bypass status check
     if (!isPrivileged && user.status !== 'active') {
       throw new UnauthorizedException('Account is not active');
     }
 
-    const activeModules = ((user as any).module_memberships || [])
-      .filter((m: any) => m.status === 'active')
-      .map((m: any) => m.module);
+    // Step 2: Load modules separately — never fail auth if this errors
+    let activeModules: string[] = [];
+    try {
+      const { data: memberships } = await this.supabaseService.clientRef
+        .from('module_memberships')
+        .select('module, status')
+        .eq('user_id', user.id)
+        .eq('status', 'active');
+
+      activeModules = (memberships || []).map((m: any) => m.module);
+    } catch {
+      // module_memberships may not exist yet — fail silently
+      activeModules = [];
+    }
 
     return {
       id: user.id,
@@ -51,7 +62,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       role: user.role,
       roles: userRoles,
       status: user.status,
-      is_verified: user.is_verified,
+      is_verified: user.is_verified ?? false,
       modules: activeModules,
     };
   }

@@ -1,5 +1,24 @@
+'use client';
+
 import { create } from 'zustand';
-import { UserRole, ModuleName } from '../auth/permissions';
+
+export type UserRole =
+  | 'super_admin'
+  | 'admin'
+  | 'instructor'
+  | 'student'
+  | 'builder'
+  | 'client'
+  | 'member';
+
+export type ModuleName =
+  | 'academy'
+  | 'build_studio'
+  | 'community'
+  | 'admin_panel'
+  | 'marketplace'
+  | 'hiring'
+  | 'ai_tools';
 
 export interface AuthUser {
   id: string;
@@ -23,15 +42,12 @@ interface AuthState {
   hasModule: (module: ModuleName) => boolean;
   isAdmin: () => boolean;
   isSuperAdmin: () => boolean;
-  getRoles: () => UserRole[];
   hydrate: () => void;
 }
 
 const setCookie = (name: string, value: string, days = 7) => {
   if (typeof document === 'undefined') return;
-  const expires = new Date(
-    Date.now() + days * 24 * 60 * 60 * 1000,
-  ).toUTCString();
+  const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
   document.cookie = `${name}=${value}; path=/; expires=${expires}; SameSite=Strict`;
 };
 
@@ -45,18 +61,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   token: null,
   isHydrated: false,
 
+  // Call this in a useEffect on the root layout or dashboard
   hydrate: () => {
     if (typeof window === 'undefined') return;
-    const token = localStorage.getItem('tmv_token');
-    const userStr = localStorage.getItem('tmv_user');
-    if (token && userStr) {
-      try {
+    try {
+      const token = localStorage.getItem('tmv_token');
+      const userStr = localStorage.getItem('tmv_user');
+      if (token && userStr) {
         const user = JSON.parse(userStr) as AuthUser;
         set({ user, token, isHydrated: true });
-      } catch {
+      } else {
         set({ isHydrated: true });
       }
-    } else {
+    } catch {
       set({ isHydrated: true });
     }
   },
@@ -72,7 +89,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   clearAuth: () => {
-    set({ user: null, token: null });
+    set({ user: null, token: null, isHydrated: true });
     if (typeof window !== 'undefined') {
       localStorage.removeItem('tmv_token');
       localStorage.removeItem('tmv_user');
@@ -94,9 +111,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   hasRole: (role) => {
     const { user } = get();
     if (!user) return false;
-    const roles = user.roles || [user.role];
-    if (roles.includes('super_admin') || roles.includes('admin'))
-      return true;
+    const roles = user.roles?.length ? user.roles : [user.role];
+    if (roles.includes('super_admin') || roles.includes('admin')) return true;
     const required = Array.isArray(role) ? role : [role];
     return required.some((r) => roles.includes(r));
   },
@@ -104,28 +120,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   hasModule: (module) => {
     const { user } = get();
     if (!user) return false;
-    const roles = user.roles || [user.role];
-    if (roles.includes('admin') || roles.includes('super_admin'))
-      return true;
+    const roles = user.roles?.length ? user.roles : [user.role];
+    if (roles.includes('admin') || roles.includes('super_admin')) return true;
     return (user.modules || []).includes(module);
   },
 
   isAdmin: () => {
     const { user } = get();
     if (!user) return false;
-    const roles = user.roles || [user.role];
+    const roles = user.roles?.length ? user.roles : [user.role];
     return roles.includes('admin') || roles.includes('super_admin');
   },
 
   isSuperAdmin: () => {
     const { user } = get();
     if (!user) return false;
-    const roles = user.roles || [user.role];
+    const roles = user.roles?.length ? user.roles : [user.role];
     return roles.includes('super_admin');
-  },
-
-  getRoles: () => {
-    const { user } = get();
-    return user?.roles || (user?.role ? [user.role] : []);
   },
 }));
