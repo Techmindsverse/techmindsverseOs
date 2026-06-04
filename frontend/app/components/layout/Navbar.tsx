@@ -50,7 +50,7 @@ export default function Navbar() {
         transition={{ duration: 0.6, ease: 'easeOut' }}
         className={clsx(
           'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-          scrolled ? 'bg-black/90 backdrop-blur-md border-b border-white/5' : 'bg-transparent'
+          scrolled ? 'bg-black/95 lg:bg-black/90 lg:backdrop-blur-md border-b border-white/5' : 'bg-transparent'
         )}
       >
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -152,7 +152,7 @@ export default function Navbar() {
               Sign In
             </Link>
             <Link
-              href="/enroll"
+              href="/register"
               className="px-4 py-2 bg-brand-blue text-white text-sm font-medium hover:bg-blue-600 transition-colors"
             >
               Join Ecosystem
@@ -236,7 +236,7 @@ export default function Navbar() {
                   Sign In
                 </Link>
                 <Link
-                  href="/enroll"
+                  href="/register"
                   onClick={() => setMenuOpen(false)}
                   className="text-center bg-brand-blue text-white py-3 text-sm font-medium"
                 >

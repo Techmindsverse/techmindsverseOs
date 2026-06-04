@@ -254,7 +254,7 @@ function CourseCard({
           ) : (
             <>
               <Link
-                href={`/enroll?course=${encodeURIComponent(course.title)}`}
+                href={`/register?course=${encodeURIComponent(course.title)}`}
                 className={`text-sm flex items-center gap-1.5 transition-all group-hover:gap-2 ${config?.color || 'text-brand-blue'}`}
               >
                 Apply Now <ArrowRight size={13} />
@@ -396,7 +396,7 @@ function AcademyDashboard({
                       <h3 className="text-white font-medium text-sm mb-1">{course.title}</h3>
                       <p className="text-white/25 text-xs leading-relaxed mb-3 line-clamp-2">{course.description}</p>
                       <Link
-                        href={`/enroll?course=${encodeURIComponent(course.title)}`}
+                        href={`/register?course=${encodeURIComponent(course.title)}`}
                         className="text-brand-blue text-xs flex items-center gap-1 hover:gap-2 transition-all"
                       >
                         Apply <ArrowRight size={11} />
@@ -438,7 +438,7 @@ export default function AcademyPage() {
         if (token && user?.role === 'student') {
           setIsStudent(true);
           try {
-            const enrollRes = await api.get('/students/me/enrollments');
+            const enrollRes = await api.get('/students/me/registerments');
             setEnrollments(enrollRes.data || []);
           } catch { /* no enrollments yet */ }
         }
@@ -528,7 +528,7 @@ export default function AcademyPage() {
               className="flex flex-col sm:flex-row gap-3"
             >
               <Link
-                href="/enroll"
+                href="/register"
                 className="group px-7 py-4 bg-brand-blue text-white font-semibold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-blue/25"
               >
                 Apply for Enrollment
@@ -598,7 +598,7 @@ export default function AcademyPage() {
                 real skills in your hands, and real connections in your network.
               </p>
               <Link
-                href="/enroll"
+                href="/register"
                 className="inline-flex items-center gap-2 text-brand-blue text-sm hover:gap-3 transition-all"
               >
                 Start your journey <ArrowRight size={14} />
@@ -744,7 +744,7 @@ export default function AcademyPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
-              href="/enroll"
+              href="/register"
               className="group px-8 py-4 bg-brand-blue text-white font-semibold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all hover:-translate-y-0.5"
             >
               Apply Now <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />

@@ -49,7 +49,7 @@ export function ModuleGate({
         this content.
       </p>
       <Link
-        href="/enroll"
+        href="/register"
         className="bg-[#1A3BDB] text-white text-sm font-semibold px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-all inline-flex items-center gap-2"
       >
         Get Access

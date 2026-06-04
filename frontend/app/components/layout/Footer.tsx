@@ -51,7 +51,7 @@ const footerLinks = {
   Account: [
     { label: 'Login', href: '/login' },
     { label: 'Dashboard', href: '/dashboard' },
-    { label: 'Join Ecosystem', href:'/enroll' },
+    { label: 'Join Ecosystem', href:'/register' },
   ],
 };
 

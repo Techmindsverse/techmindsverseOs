@@ -30,4 +30,13 @@ export class AdminPublicController {
   getPlatformStats() {
     return this.adminService.getPlatformStats();
   }
+
+  @Get('community-posts')
+@ApiOperation({ summary: 'Public community posts' })
+getCommunityPosts(
+  @Query('limit') limit = 10,
+  @Query('type') type?: string,
+) {
+  return this.adminService.getCommunityPosts(+limit, type);
+}
 }

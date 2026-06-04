@@ -45,15 +45,20 @@ interface AuthState {
   hydrate: () => void;
 }
 
+// Mobile-safe cookie setter
+// Uses SameSite=Lax (not Strict) — Strict blocks cookies on redirects on mobile
 const setCookie = (name: string, value: string, days = 7) => {
   if (typeof document === 'undefined') return;
-  const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
-  document.cookie = `${name}=${value}; path=/; expires=${expires}; SameSite=Strict`;
+  const expires = new Date(
+    Date.now() + days * 24 * 60 * 60 * 1000,
+  ).toUTCString();
+  // SameSite=Lax is required for mobile cross-navigation cookie persistence
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; expires=${expires}; SameSite=Lax`;
 };
 
 const clearCookie = (name: string) => {
   if (typeof document === 'undefined') return;
-  document.cookie = `${name}=; path=/; max-age=0`;
+  document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`;
 };
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -61,7 +66,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   token: null,
   isHydrated: false,
 
-  // Call this in a useEffect on the root layout or dashboard
   hydrate: () => {
     if (typeof window === 'undefined') return;
     try {
@@ -69,11 +73,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const userStr = localStorage.getItem('tmv_user');
       if (token && userStr) {
         const user = JSON.parse(userStr) as AuthUser;
+        // Re-sync cookies on hydration — in case they were lost on mobile
+        setCookie('tmv_token', token);
+        setCookie('tmv_role', user.role);
         set({ user, token, isHydrated: true });
       } else {
         set({ isHydrated: true });
       }
     } catch {
+      // Corrupted localStorage — clear everything
+      localStorage.removeItem('tmv_token');
+      localStorage.removeItem('tmv_user');
       set({ isHydrated: true });
     }
   },

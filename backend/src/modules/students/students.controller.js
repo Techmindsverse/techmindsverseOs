@@ -71,7 +71,7 @@ var StudentsController = function () {
         var _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create(null) : void 0;
         _getMyProfile_decorators = [(0, common_1.Get)('me'), (0, swagger_1.ApiOperation)({ summary: 'Get my student profile' })];
         _getById_decorators = [(0, common_1.Get)(':id'), (0, swagger_1.ApiOperation)({ summary: 'Get student by ID' })];
-        _getMyEnrollments_decorators = [(0, common_1.Get)('me/enrollments'), (0, swagger_1.ApiOperation)({ summary: 'Get my enrolled courses' })];
+        _getMyEnrollments_decorators = [(0, common_1.Get)('me/registerments'), (0, swagger_1.ApiOperation)({ summary: 'Get my enrolled courses' })];
         __esDecorate(_classThis, null, _getMyProfile_decorators, { kind: "method", name: "getMyProfile", static: false, private: false, access: { has: function (obj) { return "getMyProfile" in obj; }, get: function (obj) { return obj.getMyProfile; } }, metadata: _metadata }, null, _instanceExtraInitializers);
         __esDecorate(_classThis, null, _getById_decorators, { kind: "method", name: "getById", static: false, private: false, access: { has: function (obj) { return "getById" in obj; }, get: function (obj) { return obj.getById; } }, metadata: _metadata }, null, _instanceExtraInitializers);
         __esDecorate(_classThis, null, _getMyEnrollments_decorators, { kind: "method", name: "getMyEnrollments", static: false, private: false, access: { has: function (obj) { return "getMyEnrollments" in obj; }, get: function (obj) { return obj.getMyEnrollments; } }, metadata: _metadata }, null, _instanceExtraInitializers);

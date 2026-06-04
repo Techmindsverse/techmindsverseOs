@@ -1,7 +1,7 @@
 import Navbar from './Navbar';
 import Footer from './Footer';
-import PWAInstall from '../PWAInstall';
-import MobileNav from '../MobileNav';
+import PWAInstall from '@/app/components/PWAInstall';
+import MobileNav from '@/app/components/MobileNav';
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (

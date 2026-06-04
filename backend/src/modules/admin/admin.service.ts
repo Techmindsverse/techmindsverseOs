@@ -272,6 +272,195 @@ export class AdminService {
   }
 
   // ─────────────────────────────────────────
+// COMMUNITY POSTS
+// ─────────────────────────────────────────
+async getCommunityPosts(limit = 20, type?: string) {
+  let query = this.supabaseService.clientRef
+    .from('community_posts')
+    .select('*, users(email)')
+    .eq('status', 'active')
+    .order('pinned', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (type) query = query.eq('type', type);
+
+  const { data } = await query;
+  return data || [];
+}
+
+async createCommunityPost(
+  dto: {
+    title: string;
+    content: string;
+    type: string;
+    pinned?: boolean;
+  },
+  authorId: string,
+) {
+  const { data, error } = await this.supabaseService.clientRef
+    .from('community_posts')
+    .insert({
+      title: dto.title,
+      content: dto.content,
+      type: dto.type,
+      pinned: dto.pinned || false,
+      status: 'active',
+      author_id: authorId,
+    })
+    .select()
+    .single();
+
+  if (error) throw new BadRequestException('Failed to create post');
+
+  // Also insert into announcements for backwards compatibility
+  await this.supabaseService.clientRef.from('announcements').insert({
+    title: dto.title,
+    content: dto.content,
+    type: dto.type,
+    pinned: dto.pinned || false,
+    status: 'active',
+    author_id: authorId,
+  });
+
+  return data;
+}
+
+async deleteCommunityPost(postId: string) {
+  const { error } = await this.supabaseService.clientRef
+    .from('community_posts')
+    .update({ status: 'deleted' })
+    .eq('id', postId);
+
+  if (error) throw new BadRequestException('Failed to delete post');
+  return { message: 'Post deleted' };
+}
+
+// ─────────────────────────────────────────
+// COMMUNITY MEMBERS
+// ─────────────────────────────────────────
+async getCommunityMembers(page = 1, limit = 20) {
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  const { data, count } = await this.supabaseService.clientRef
+    .from('community_members')
+    .select('*, users(id, email, role, username, status)', { count: 'exact' })
+    .eq('status', 'active')
+    .order('joined_at', { ascending: false })
+    .range(from, to);
+
+  return { data: data || [], total: count || 0, page, limit };
+}
+
+// ─────────────────────────────────────────
+// USER LIFECYCLE MANAGEMENT
+// ─────────────────────────────────────────
+async getAllUsers(page = 1, limit = 20) {
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  const { data, count } = await this.supabaseService.clientRef
+    .from('users')
+    .select(
+      'id, email, role, roles, status, username, avatar_url, created_at, last_login, is_deleted',
+      { count: 'exact' },
+    )
+    .eq('is_deleted', false)
+    .order('created_at', { ascending: false })
+    .range(from, to);
+
+  return { data: data || [], total: count || 0, page, limit };
+}
+
+async suspendUser(userId: string, reason: string) {
+  const { error } = await this.supabaseService.clientRef
+    .from('users')
+    .update({ status: 'suspended' })
+    .eq('id', userId);
+
+  if (error) throw new BadRequestException('Failed to suspend user');
+
+  await this.supabaseService.clientRef.from('user_activities').insert({
+    user_id: userId,
+    action: `ACCOUNT_SUSPENDED: ${reason}`,
+  });
+
+  return { message: 'User suspended' };
+}
+
+async restoreUser(userId: string) {
+  const { error } = await this.supabaseService.clientRef
+    .from('users')
+    .update({ status: 'active', is_deleted: false, deleted_at: null })
+    .eq('id', userId);
+
+  if (error) throw new BadRequestException('Failed to restore user');
+
+  await this.supabaseService.clientRef.from('user_activities').insert({
+    user_id: userId,
+    action: 'ACCOUNT_RESTORED',
+  });
+
+  return { message: 'User restored' };
+}
+
+async softDeleteUser(userId: string, reason: string) {
+  const { error } = await this.supabaseService.clientRef
+    .from('users')
+    .update({
+      is_deleted: true,
+      deleted_at: new Date().toISOString(),
+      deleted_reason: reason,
+      status: 'suspended',
+    })
+    .eq('id', userId);
+
+  if (error) throw new BadRequestException('Failed to delete user');
+  return { message: 'User soft deleted' };
+}
+
+// ─────────────────────────────────────────
+// DOWNLOADS / COUNTERS
+// ─────────────────────────────────────────
+async trackDownload(userId?: string, eventType = 'pwa_install') {
+  await this.supabaseService.clientRef.from('download_events').insert({
+    event_type: eventType,
+    user_id: userId || null,
+  });
+
+  // Increment counter
+  await this.supabaseService.clientRef.rpc('increment_counter', {
+    counter_key: 'downloads',
+  });
+
+  return { tracked: true };
+}
+
+async getDownloadCount() {
+  const { data } = await this.supabaseService.clientRef
+    .from('platform_counters')
+    .select('value')
+    .eq('key', 'downloads')
+    .single();
+
+  return { count: data?.value || 0 };
+}
+
+async getDownloadLogs(page = 1, limit = 50) {
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  const { data, count } = await this.supabaseService.clientRef
+    .from('download_events')
+    .select('*, users(email)', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(from, to);
+
+  return { data: data || [], total: count || 0 };
+}
+
+  // ─────────────────────────────────────────
   // ANNOUNCEMENTS
   // ─────────────────────────────────────────
   async getAnnouncements(limit = 10) {

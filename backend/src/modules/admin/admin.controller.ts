@@ -8,6 +8,7 @@ import {
   UseGuards,
   Query,
   Req,
+  Delete,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -142,4 +143,91 @@ export class AdminController {
       dto.label,
     );
   }
+  // Community
+@Get('community/posts')
+@ApiOperation({ summary: 'Get community posts' })
+getCommunityPosts(
+  @Query('limit') limit = 20,
+  @Query('type') type?: string,
+) {
+  return this.adminService.getCommunityPosts(+limit, type);
+}
+
+@Post('community/posts')
+@ApiOperation({ summary: 'Create community post' })
+createCommunityPost(
+  @Body() dto: any,
+  @Req() req: Request & { user: any },
+) {
+  return this.adminService.createCommunityPost(dto, req.user.id);
+}
+
+@Delete('community/posts/:id')
+@ApiOperation({ summary: 'Delete community post' })
+deleteCommunityPost(@Param('id') id: string) {
+  return this.adminService.deleteCommunityPost(id);
+}
+
+// Community members
+@Get('community/members')
+@ApiOperation({ summary: 'Get community members' })
+getCommunityMembers(
+  @Query('page') page = 1,
+  @Query('limit') limit = 20,
+) {
+  return this.adminService.getCommunityMembers(+page, +limit);
+}
+
+// Users lifecycle
+@Get('users')
+@ApiOperation({ summary: 'Get all users' })
+getAllUsers(
+  @Query('page') page = 1,
+  @Query('limit') limit = 20,
+) {
+  return this.adminService.getAllUsers(+page, +limit);
+}
+
+@Patch('users/:id/suspend')
+@ApiOperation({ summary: 'Suspend user' })
+suspendUser(
+  @Param('id') id: string,
+  @Body() dto: { reason: string },
+) {
+  return this.adminService.suspendUser(id, dto.reason || 'Suspended by admin');
+}
+
+@Patch('users/:id/restore')
+@ApiOperation({ summary: 'Restore user' })
+restoreUser(@Param('id') id: string) {
+  return this.adminService.restoreUser(id);
+}
+
+@Delete('users/:id')
+@ApiOperation({ summary: 'Soft delete user' })
+deleteUser(
+  @Param('id') id: string,
+  @Body() dto: { reason: string },
+) {
+  return this.adminService.softDeleteUser(id, dto.reason || 'Deleted by admin');
+}
+
+// Downloads
+@Post('track-download')
+@ApiOperation({ summary: 'Track a download event' })
+trackDownload(
+  @Body() dto: { event_type?: string },
+  @Req() req: Request & { user?: any },
+) {
+  return this.adminService.trackDownload(req.user?.id, dto.event_type);
+}
+
+@Get('downloads')
+@ApiOperation({ summary: 'Get download logs' })
+getDownloads(
+  @Query('page') page = 1,
+  @Query('limit') limit = 50,
+) {
+  return this.adminService.getDownloadLogs(+page, +limit);
+}
 }

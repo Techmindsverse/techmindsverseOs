@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Download, Link, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import api from '../lib/api';
 
 export default function PWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -26,13 +27,19 @@ export default function PWAInstall() {
   }, []);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') setInstalled(true);
-    setShow(false);
-    setDeferredPrompt(null);
-  };
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') {
+    setInstalled(true);
+    // Track download — fire and forget, don't await
+    try {
+      api.post('/admin/track-download', { event_type: 'pwa_install' }).catch(() => {});
+    } catch { /* ignore */ }
+  }
+  setShow(false);
+  setDeferredPrompt(null);
+};
 
   const handleDismiss = () => {
     setShow(false);

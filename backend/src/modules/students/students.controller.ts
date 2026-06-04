@@ -23,7 +23,7 @@ export class StudentsController {
     return this.studentsService.getById(id);
   }
 
-  @Get('me/enrollments')
+  @Get('me/registerments')
 @ApiOperation({ summary: 'Get my enrolled courses' })
 getMyEnrollments(@CurrentUser() user: any) {
   return this.studentsService.getEnrollments(user.id);
