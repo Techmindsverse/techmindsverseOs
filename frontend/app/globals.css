@@ -7,41 +7,100 @@
 /* ============================================================
    DESIGN TOKENS
    ============================================================ */
-:root {
-  --brand-blue: #1A3BDB;
-  --brand-purple: #6D28D9;
-  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+:root,
+[data-theme='light'] {
+  /* Surfaces */
+  --bg-root:        #f5f6fa;
+  --bg-surface:     #ffffff;
+  --bg-card:        #ffffff;
+  --bg-hover:       rgba(0, 0, 0, 0.03);
+  --bg-input:       rgba(0, 0, 0, 0.04);
+  --bg-muted:       #f0f1f7;
 
-  /* Dark (default) */
-  --bg-primary: #000000;
-  --bg-secondary: #0A0A0A;
-  --bg-card: #0d0d0d;
-  --bg-hover: rgba(255,255,255,0.03);
-  --border: rgba(255,255,255,0.07);
-  --border-hover: rgba(255,255,255,0.12);
-  --text-1: #ffffff;
-  --text-2: rgba(255,255,255,0.6);
-  --text-3: rgba(255,255,255,0.35);
-  --text-4: rgba(255,255,255,0.15);
-  --scrollbar-bg: #000;
-  --scrollbar-thumb: #1A3BDB;
+  /* Borders */
+  --border:         rgba(0, 0, 0, 0.08);
+  --border-hover:   rgba(0, 0, 0, 0.14);
+  --border-focus:   #1A3BDB;
+
+  /* Text */
+  --text-1:         #0a0a0a;
+  --text-2:         rgba(0, 0, 0, 0.60);
+  --text-3:         rgba(0, 0, 0, 0.38);
+  --text-4:         rgba(0, 0, 0, 0.20);
+
+  /* Brand */
+  --brand:          #1A3BDB;
+  --brand-hover:    #1530b8;
+  --brand-light:    rgba(26, 59, 219, 0.08);
+  --brand-border:   rgba(26, 59, 219, 0.25);
+
+  /* Scrollbar */
+  --sb-track:       #e8e9f0;
+  --sb-thumb:       #1A3BDB;
+
+  /* Status */
+  --success-bg:     #f0fdf4;
+  --success-text:   #166534;
+  --success-border: #bbf7d0;
+  --warning-bg:     #fefce8;
+  --warning-text:   #854d0e;
+  --warning-border: #fde68a;
+  --error-bg:       #fef2f2;
+  --error-text:     #991b1b;
+  --error-border:   #fecaca;
+  --info-bg:        #eff6ff;
+  --info-text:      #1e40af;
+  --info-border:    #bfdbfe;
+
+  /* Shadows */
+  --shadow-sm:      0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:      0 4px 12px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.05);
+  --shadow-lg:      0 12px 32px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-brand:   0 8px 24px rgba(26,59,219,0.18);
 }
 
-/* Light theme */
-[data-theme="light"] {
-  --bg-primary: #f4f6ff;
-  --bg-secondary: #ffffff;
-  --bg-card: #ffffff;
-  --bg-hover: rgba(0,0,0,0.03);
-  --border: rgba(0,0,0,0.08);
-  --border-hover: rgba(0,0,0,0.14);
-  --text-1: #0a0a0a;
-  --text-2: rgba(0,0,0,0.6);
-  --text-3: rgba(0,0,0,0.38);
-  --text-4: rgba(0,0,0,0.18);
-  --scrollbar-bg: #eef0ff;
-  --scrollbar-thumb: #1A3BDB;
+[data-theme='dark'] {
+  --bg-root:        #000000;
+  --bg-surface:     #0A0A0A;
+  --bg-card:        #0d0d0d;
+  --bg-hover:       rgba(255, 255, 255, 0.03);
+  --bg-input:       rgba(255, 255, 255, 0.05);
+  --bg-muted:       #111111;
+
+  --border:         rgba(255, 255, 255, 0.07);
+  --border-hover:   rgba(255, 255, 255, 0.12);
+  --border-focus:   #1A3BDB;
+
+  --text-1:         #ffffff;
+  --text-2:         rgba(255, 255, 255, 0.55);
+  --text-3:         rgba(255, 255, 255, 0.32);
+  --text-4:         rgba(255, 255, 255, 0.15);
+
+  --brand:          #1A3BDB;
+  --brand-hover:    #2547e8;
+  --brand-light:    rgba(26, 59, 219, 0.12);
+  --brand-border:   rgba(26, 59, 219, 0.35);
+
+  --sb-track:       #000;
+  --sb-thumb:       #1A3BDB;
+
+  --success-bg:     rgba(22, 101, 52, 0.15);
+  --success-text:   #4ade80;
+  --success-border: rgba(74, 222, 128, 0.20);
+  --warning-bg:     rgba(133, 77, 14, 0.15);
+  --warning-text:   #fbbf24;
+  --warning-border: rgba(251, 191, 36, 0.20);
+  --error-bg:       rgba(153, 27, 27, 0.15);
+  --error-text:     #f87171;
+  --error-border:   rgba(248, 113, 113, 0.20);
+  --info-bg:        rgba(30, 64, 175, 0.15);
+  --info-text:      #60a5fa;
+  --info-border:    rgba(96, 165, 250, 0.20);
+
+  --shadow-sm:      none;
+  --shadow-md:      none;
+  --shadow-lg:      none;
+  --shadow-brand:   0 8px 24px rgba(26,59,219,0.30);
 }
 
 /* ============================================================
@@ -61,15 +120,17 @@ html {
 
 body {
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-  background-color: var(--bg-primary);
+  background-color: var(--bg-root);
   color: var(--text-1);
   overflow-x: hidden;
-  transition: background-color 0.2s ease, color 0.2s ease;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Prevent iOS input zoom — CRITICAL for mobile */
+/* ============================================================
+   MOBILE: Prevent iOS zoom on input focus
+   ============================================================ */
 input,
 textarea,
 select {
@@ -77,19 +138,13 @@ select {
 }
 
 @media (min-width: 640px) {
-  input,
-  textarea,
-  select {
+  input, textarea, select {
     font-size: 14px;
   }
 }
 
 /* Minimum touch targets */
-button,
-a,
-[role="button"],
-[type="submit"],
-[type="button"] {
+button, a[role], [role='button'] {
   min-height: 44px;
 }
 
@@ -104,90 +159,148 @@ a,
 /* ============================================================
    SCROLLBAR
    ============================================================ */
-::-webkit-scrollbar { width: 3px; height: 3px; }
-::-webkit-scrollbar-track { background: var(--scrollbar-bg); }
-::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 2px; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--sb-track); }
+::-webkit-scrollbar-thumb { background: var(--sb-thumb); border-radius: 2px; }
 
 /* ============================================================
-   LIGHT MODE OVERRIDES
-   Organized by category, no duplicates
+   SEMANTIC UTILITY CLASSES (theme-aware)
    ============================================================ */
-[data-theme="light"] .bg-black { background-color: var(--bg-primary) !important; }
-[data-theme="light"] .bg-black\/80 { background-color: rgba(244,246,255,0.9) !important; }
-[data-theme="light"] .bg-black\/95 { background-color: rgba(244,246,255,0.97) !important; }
-[data-theme="light"] .bg-white\/5 { background-color: rgba(0,0,0,0.03) !important; }
-[data-theme="light"] .bg-white\/\[0\.01\] { background-color: transparent !important; }
-[data-theme="light"] .bg-brand-gray { background-color: #eef0ff !important; }
 
-[data-theme="light"] .border-white\/5 { border-color: rgba(0,0,0,0.06) !important; }
-[data-theme="light"] .border-white\/8 { border-color: rgba(0,0,0,0.07) !important; }
-[data-theme="light"] .border-white\/10 { border-color: rgba(0,0,0,0.09) !important; }
-[data-theme="light"] .border-white\/20 { border-color: rgba(0,0,0,0.13) !important; }
+/* Backgrounds */
+.bg-surface    { background-color: var(--bg-surface); }
+.bg-card       { background-color: var(--bg-card); }
+.bg-root       { background-color: var(--bg-root); }
+.bg-muted      { background-color: var(--bg-muted); }
+.bg-brand-soft { background-color: var(--brand-light); }
 
-[data-theme="light"] .text-white { color: #0a0a0a !important; }
-[data-theme="light"] .text-white\/90 { color: rgba(10,10,10,0.9) !important; }
-[data-theme="light"] .text-white\/70 { color: rgba(10,10,10,0.7) !important; }
-[data-theme="light"] .text-white\/60 { color: rgba(10,10,10,0.6) !important; }
-[data-theme="light"] .text-white\/50 { color: rgba(10,10,10,0.5) !important; }
-[data-theme="light"] .text-white\/40 { color: rgba(10,10,10,0.4) !important; }
-[data-theme="light"] .text-white\/35 { color: rgba(10,10,10,0.35) !important; }
-[data-theme="light"] .text-white\/30 { color: rgba(10,10,10,0.3) !important; }
-[data-theme="light"] .text-white\/25 { color: rgba(10,10,10,0.25) !important; }
-[data-theme="light"] .text-white\/20 { color: rgba(10,10,10,0.2) !important; }
-[data-theme="light"] .text-white\/15 { color: rgba(10,10,10,0.15) !important; }
+/* Text */
+.text-primary   { color: var(--text-1); }
+.text-secondary { color: var(--text-2); }
+.text-muted     { color: var(--text-3); }
+.text-faint     { color: var(--text-4); }
+.text-brand     { color: var(--brand); }
 
-/* Fix gradient text clipping in light mode */
-[data-theme="light"] .bg-gradient-to-b.from-white {
-  --tw-gradient-from: #0a0a0a !important;
+/* Borders */
+.border-surface { border-color: var(--border); }
+.border-brand-soft { border-color: var(--brand-border); }
+
+/* Status */
+.status-success { background: var(--success-bg); color: var(--success-text); border: 1px solid var(--success-border); }
+.status-warning { background: var(--warning-bg); color: var(--warning-text); border: 1px solid var(--warning-border); }
+.status-error   { background: var(--error-bg);   color: var(--error-text);   border: 1px solid var(--error-border); }
+.status-info    { background: var(--info-bg);     color: var(--info-text);    border: 1px solid var(--info-border); }
+
+/* ============================================================
+   FORM ELEMENTS
+   ============================================================ */
+.tmv-input {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-1);
+  padding: 12px 16px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
+  border-radius: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.tmv-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--brand-light);
+}
+
+.tmv-input::placeholder {
+  color: var(--text-3);
+}
+
+/* ============================================================
+   DASHBOARD SPECIFIC (light surface)
+   ============================================================ */
+.dash-sidebar {
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border);
+}
+
+.dash-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dash-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.dash-nav-item {
+  color: var(--text-3);
+  transition: all 0.15s ease;
+}
+
+.dash-nav-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-1);
+}
+
+.dash-nav-item.active {
+  background: var(--brand-light);
+  color: var(--brand);
+  border-color: var(--brand-border);
 }
 
 /* ============================================================
    ANIMATIONS
    ============================================================ */
 @keyframes shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-
-@keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(26,59,219,0); }
-  50% { box-shadow: 0 0 20px 4px rgba(26,59,219,0.22); }
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
 }
 
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  50%       { transform: translateY(-10px); }
 }
 
 @keyframes floatSlow {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+  50%       { transform: translateY(-5px); }
 }
 
 @keyframes marquee {
   from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  to   { transform: translateX(-50%); }
 }
 
 @keyframes particleRise {
-  0% { transform: translateY(0); opacity: 0; }
-  8% { opacity: 0.5; }
-  88% { opacity: 0.5; }
+  0%   { transform: translateY(0);     opacity: 0; }
+  8%   {                               opacity: 0.5; }
+  88%  {                               opacity: 0.5; }
   100% { transform: translateY(-900px); opacity: 0; }
 }
 
 @keyframes pulseDot {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.5); opacity: 0.7; }
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%       { transform: scale(1.5); opacity: 0.7; }
 }
 
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 /* ============================================================
-   UTILITY CLASSES
+   UTILITY ANIMATION CLASSES
    ============================================================ */
 .shimmer-text {
   background: linear-gradient(
@@ -202,10 +315,9 @@ a,
   animation: shimmer 4s linear infinite;
 }
 
-.glow-pulse { animation: glowPulse 3s ease-in-out infinite; }
-.float { animation: float 6s ease-in-out infinite; }
+.float      { animation: float 6s ease-in-out infinite; }
 .float-slow { animation: floatSlow 9s ease-in-out infinite; }
-.pulse-dot { animation: pulseDot 2s ease-in-out infinite; }
+.pulse-dot  { animation: pulseDot 2s ease-in-out infinite; }
 .fade-in-up { animation: fadeInUp 0.4s ease forwards; }
 
 .marquee-track {
@@ -215,19 +327,7 @@ a,
   will-change: transform;
 }
 
-.particle {
-  animation: particleRise var(--duration, 10s) var(--delay, 0s) linear infinite;
-}
-
-.card-hover {
-  transition: transform 0.25s var(--ease-smooth), border-color 0.25s ease;
-}
-.card-hover:hover {
-  transform: translateY(-4px);
-  border-color: rgba(26,59,219,0.35) !important;
-}
-
-/* Mobile content padding for bottom nav */
+/* Content padding above mobile nav */
 .pb-mobile-nav {
   padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
 }
@@ -236,47 +336,58 @@ a,
   .pb-mobile-nav { padding-bottom: 0; }
 }
 
-/* ============================================================
-   FORM ELEMENTS — consistent cross-browser
-   ============================================================ */
-.tmv-input {
-  width: 100%;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: white;
-  padding: 12px 16px;
-  font-size: 14px;
-  transition: border-color 0.2s ease;
-  outline: none;
-  border-radius: 0;
-  appearance: none;
-  -webkit-appearance: none;
-}
-
-.tmv-input:focus { border-color: #1A3BDB; }
-
-[data-theme="light"] .tmv-input {
-  background: rgba(0,0,0,0.03);
-  border-color: rgba(0,0,0,0.1);
-  color: #0a0a0a;
+/* Section isolation — prevents GPU layer bleed artifacts */
+.section-isolated {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  z-index: 0;
 }
 
 /* ============================================================
-   REDUCE MOTION
+   MOBILE PERFORMANCE
    ============================================================ */
-@media (prefers-reduced-motion: reduce) {
-  .float,
-  .float-slow,
-  .glow-pulse,
-  .pulse-dot,
-  .shimmer-text,
-  .marquee-track,
-  .particle {
-    animation: none !important;
+@media (max-width: 1024px) {
+  /* Remove backdrop-filter — causes purple artifacts on Android/mobile Chrome */
+  .backdrop-blur-md,
+  .backdrop-blur-sm,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl,
+  [class*='backdrop-blur'] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
+  /* Disable excessive GPU compositing */
   * {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
+    will-change: auto !important;
+  }
+
+  /* Contain layout per section to prevent paint overflow */
+  section {
+    contain: layout style;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Slower marquee on low-end devices */
+  .marquee-track {
+    animation-duration: 40s !important;
+  }
+
+  /* Simpler hover — no transform lifts on mobile */
+  .card-hover:hover {
+    transform: none !important;
+  }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration:   0.01ms !important;
+    transition-duration:  0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

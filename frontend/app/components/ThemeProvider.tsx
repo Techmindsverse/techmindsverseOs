@@ -5,44 +5,69 @@ import { Sun, Moon } from 'lucide-react';
 
 type Theme = 'dark' | 'light';
 
-const ThemeContext = createContext<{ theme: Theme; toggle: () => void }>({
-  theme: 'dark',
+interface ThemeContextType {
+  theme: Theme;
+  toggle: () => void;
+  setTheme: (t: Theme) => void;
+}
+
+const ThemeContext = createContext<ThemeContextType>({
+  theme: 'light',
   toggle: () => {},
+  setTheme: () => {},
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark');
+  const [theme, setThemeState] = useState<Theme>('light');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('tmv_theme') as Theme || 'dark';
-    setTheme(saved);
+    setMounted(true);
+    // Read saved preference — default to 'light' if nothing saved
+    const saved = (localStorage.getItem('tmv_theme') as Theme) || 'light';
+    setThemeState(saved);
     document.documentElement.setAttribute('data-theme', saved);
   }, []);
 
-  const toggle = () => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    localStorage.setItem('tmv_theme', next);
-    document.documentElement.setAttribute('data-theme', next);
+  const setTheme = (t: Theme) => {
+    setThemeState(t);
+    localStorage.setItem('tmv_theme', t);
+    document.documentElement.setAttribute('data-theme', t);
   };
 
+  const toggle = () => setTheme(theme === 'dark' ? 'light' : 'dark');
+
+  // Prevent flash of wrong theme on first render
+  if (!mounted) {
+    return (
+      <ThemeContext.Provider value={{ theme: 'light', toggle, setTheme }}>
+        {children}
+      </ThemeContext.Provider>
+    );
+  }
+
   return (
-    <ThemeContext.Provider value={{ theme, toggle }}>
+    <ThemeContext.Provider value={{ theme, toggle, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ className = '' }: { className?: string }) {
   const { theme, toggle } = useContext(ThemeContext);
 
   return (
     <button
       onClick={toggle}
-      className="w-8 h-8 flex items-center justify-center border border-white/10 hover:border-brand-blue/30 transition-colors text-white/40 hover:text-white"
+      className={`w-9 h-9 flex items-center justify-center border transition-all
+        ${theme === 'dark'
+          ? 'border-white/10 text-white/50 hover:text-white hover:border-white/25 bg-transparent'
+          : 'border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-300 bg-white'
+        } ${className}`}
       title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+      aria-label="Toggle theme"
     >
-      {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+      {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
     </button>
   );
 }
