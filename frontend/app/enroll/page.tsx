@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import EnrollContent from './registerContent';
+import EnrollContent from '../register/page';
 
 export default function Page() {
   return (
