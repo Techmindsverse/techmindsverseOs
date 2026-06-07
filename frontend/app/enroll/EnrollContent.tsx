@@ -1,10 +1,11 @@
+// EnrollContent.tsx
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/app/lib/api';
-import { ArrowLeft, CheckCircle, BookOpen, Package, Activity, Bell } from 'lucide-react';
+import { ArrowLeft, CheckCircle } from 'lucide-react';
 
 const courses = [
   'Full-Stack Development',
@@ -45,7 +46,7 @@ function EnrollForm() {
     setIsLoggedIn(!!token);
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!form.course) { setError('Please select a course.'); return; }
     setLoading(true);
