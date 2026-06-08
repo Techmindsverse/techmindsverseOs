@@ -5,7 +5,8 @@ const config: Config = {
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
   ],
-  darkMode: 'class',
+  // CRITICAL: must match data-theme attribute, NOT CSS class
+  darkMode: ['selector', '[data-theme="dark"]'],
   theme: {
     extend: {
       colors: {
@@ -20,10 +21,10 @@ const config: Config = {
         bebas: ['Bebas Neue', 'sans-serif'],
       },
       animation: {
-        float: 'float 6s ease-in-out infinite',
-        'float-slow': 'floatSlow 8s ease-in-out infinite',
-        shimmer: 'shimmer 4s linear infinite',
-        marquee: 'marquee 30s linear infinite',
+        float:        'float 6s ease-in-out infinite',
+        'float-slow': 'floatSlow 9s ease-in-out infinite',
+        shimmer:      'shimmer 4s linear infinite',
+        marquee:      'marquee 28s linear infinite',
       },
     },
   },

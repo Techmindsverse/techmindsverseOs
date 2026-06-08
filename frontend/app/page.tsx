@@ -3,19 +3,16 @@
 import { Analytics } from '@vercel/analytics/next';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import {
   ArrowRight, Users, Package, BookOpen,
-  Zap, Globe, Shield, ChevronRight,
-  Star, Activity, Code2
+  Zap, Globe, Shield, ChevronRight, Star, Activity,
 } from 'lucide-react';
 import PublicLayout from '@/app/components/layout/PublicLayout';
+import { useTheme } from '@/app/components/ThemeProvider';
 import api from '@/app/lib/api';
 
-/* ============================================================
-   STABLE PARTICLE DATA — no Math.random() on server
-   ============================================================ */
+/* ── Stable particle data ── */
 const PARTICLES = Array.from({ length: 14 }, (_, i) => ({
   id: i,
   x: ((i * 7.3 + 11) % 97).toFixed(1),
@@ -23,18 +20,11 @@ const PARTICLES = Array.from({ length: 14 }, (_, i) => ({
   delay: i * 0.55,
 }));
 
-const ORBS = [
-  { w: 480, h: 480, top: '15%', left: '10%', color: 'bg-brand-blue/[0.06]', blur: 'blur-[130px]', delay: 0 },
-  { w: 360, h: 360, top: '55%', right: '8%', color: 'bg-purple-600/[0.05]', blur: 'blur-[120px]', delay: 2.5 },
-];
-
-/* ============================================================
-   TYPED TEXT — mounted only on client to avoid hydration
-   ============================================================ */
+/* ── Typed text ── */
 function TypedText({ words }: { words: string[] }) {
   const [mounted, setMounted] = useState(false);
-  const [index, setIndex] = useState(0);
-  const [text, setText] = useState('');
+  const [index, setIndex]     = useState(0);
+  const [text, setText]       = useState('');
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
@@ -58,36 +48,32 @@ function TypedText({ words }: { words: string[] }) {
   }, [mounted, text, deleting, index, words]);
 
   return (
-    <span className="text-brand-blue">
+    <span className="text-[#1A3BDB]">
       {mounted ? text : words[0]}
       {mounted && (
         <motion.span
           animate={{ opacity: [1, 0] }}
           transition={{ duration: 0.5, repeat: Infinity }}
-          className="inline-block w-[3px] h-[0.82em] bg-brand-blue ml-1 align-middle"
+          className="inline-block w-[3px] h-[0.82em] bg-[#1A3BDB] ml-1 align-middle"
         />
       )}
     </span>
   );
 }
 
-/* ============================================================
-   PARTICLES — client-only render
-   ============================================================ */
+/* ── Particles ── */
 function Particles() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
   if (!mounted) return null;
-
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
       {PARTICLES.map(p => (
         <div
           key={p.id}
-          className="absolute w-1 h-1 rounded-full bg-brand-blue/40 particle"
+          className="absolute w-1 h-1 rounded-full bg-[#1A3BDB]/40 particle"
           style={{
-            left: `${p.x}%`,
-            bottom: '-4px',
+            left: `${p.x}%`, bottom: '-4px',
             '--duration': `${p.duration}s`,
             '--delay': `${p.delay}s`,
           } as React.CSSProperties}
@@ -97,168 +83,152 @@ function Particles() {
   );
 }
 
-/* ============================================================
-   COUNT UP
-   ============================================================ */
-function useCountUp(target: number, duration = 1800, start = false) {
+/* ── Count up — component, not a hook called in map ── */
+function CountUp({ target, suffix, label, start }: {
+  target: number; suffix: string; label: string; start: boolean;
+}) {
   const [count, setCount] = useState(0);
   useEffect(() => {
-    if (!start || target === 0) return;
+    if (!start || target === 0) { setCount(0); return; }
     let startTime: number;
     const step = (ts: number) => {
       if (!startTime) startTime = ts;
-      const progress = Math.min((ts - startTime) / duration, 1);
+      const progress = Math.min((ts - startTime) / 1800, 1);
       setCount(Math.floor(progress * target));
       if (progress < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
-  }, [start, target, duration]);
-  return count;
+  }, [start, target]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      className="text-center"
+    >
+      <p className="font-bebas text-5xl md:text-7xl text-[#1A3BDB]">
+        {start ? count : 0}{suffix}
+      </p>
+      <p className="text-secondary text-sm mt-1">{label}</p>
+    </motion.div>
+  );
 }
 
-/* ============================================================
-   STATIC DATA
-   ============================================================ */
+/* ── Static data ── */
 const MODULES = [
   {
     icon: BookOpen, tag: 'LEARN', title: 'Academy',
-    description: 'Project-based learning where students build real-world products from day one.',
-    href: '/academy', gradient: 'from-blue-600/20',
-    features: ['Structured curriculum', 'Live mentorship', 'Certificates'],
+    description: 'Project-based learning where every lesson builds toward a real product in your portfolio.',
+    href: '/academy', gradient: 'from-blue-600/15',
+    features: ['Structured curriculum', 'Live mentorship', 'Ecosystem certificate'],
   },
   {
     icon: Package, tag: 'BUILD', title: 'Build Studio',
-    description: 'We turn your ideas into production-ready digital products from concept to launch.',
-    href: '/build', gradient: 'from-purple-600/20',
-    features: ['MVP development', 'Full-stack execution', 'Post-launch support'],
+    description: 'We turn your product ideas into production-ready applications, from concept to launch.',
+    href: '/build', gradient: 'from-purple-600/15',
+    features: ['Full-stack execution', 'MVP to production', 'Post-launch support'],
   },
   {
     icon: Users, tag: 'CONNECT', title: 'Community',
-    description: 'A growing network of builders, designers, and founders collaborating globally.',
-    href: '/community', gradient: 'from-green-600/20',
-    features: ['Networking events', 'Collaboration tools', 'Opportunity board'],
+    description: 'A growing network of builders, designers, and founders collaborating and shipping together.',
+    href: '/community', gradient: 'from-green-600/15',
+    features: ['Ecosystem announcements', 'Builder network', 'Opportunity board'],
   },
 ];
 
 const TECH = ['React', 'Next.js', 'Node.js', 'TypeScript', 'Supabase', 'NestJS', 'TailwindCSS', 'PostgreSQL', 'Vercel', 'Python', 'AI/ML', 'Docker'];
 
 const HOW_IT_WORKS = [
-  { step: '01', icon: Users, title: 'Create Your Account', desc: 'Sign up as a student or client. Identity created instantly.' },
-  { step: '02', icon: Shield, title: 'Verify Your Email', desc: 'Enter the OTP sent to your email. Account activates immediately.' },
-  { step: '03', icon: Activity, title: 'Access Your Dashboard', desc: 'Your OS dashboard is live. Explore, build, track progress.' },
-  { step: '04', icon: Zap, title: 'Learn, Build, or Launch', desc: 'Enroll in courses, submit a product idea, join the community.' },
-  { step: '05', icon: Globe, title: 'Grow in the Ecosystem', desc: 'Complete projects, earn recognition, unlock opportunities.' },
+  { step: '01', icon: Users,    title: 'Create Your Account',     desc: 'Sign up as a student or client. Your ecosystem identity is created instantly.' },
+  { step: '02', icon: Shield,   title: 'Verify Your Email',       desc: 'Enter the 6-digit OTP sent to your email. Your account activates immediately.' },
+  { step: '03', icon: Activity, title: 'Access Your Dashboard',   desc: 'Your personal OS dashboard is live. Explore courses, submit builds, and track everything.' },
+  { step: '04', icon: Zap,      title: 'Learn, Build, or Launch', desc: 'Enroll in a course, submit a product idea, or join the builder community.' },
+  { step: '05', icon: Globe,    title: 'Grow in the Ecosystem',   desc: 'Complete projects, earn recognition, unlock new roles and opportunities.' },
 ];
 
-/* ============================================================
-   PAGE
-   ============================================================ */
 export default function HomePage() {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   const statsRef = useRef<HTMLDivElement>(null);
   const [statsVisible, setStatsVisible] = useState(false);
   const { scrollY } = useScroll();
-  const yBg = useTransform(scrollY, [0, 800], [0, -55]);
-  const yText = useTransform(scrollY, [0, 600], [0, -22]);
-  const opacityHero = useTransform(scrollY, [0, 600], [1, 0.88]);
+  const yBg   = useTransform(scrollY, [0, 800], [0, -55]);
+  const yText  = useTransform(scrollY, [0, 600], [0, -22]);
+  const opacity = useTransform(scrollY, [0, 600], [1, 0.88]);
 
-  // Dynamic data state
-  const [liveStats, setLiveStats] = useState({
-    active_users: 0,
-    total_students: 0,
-    total_builds: 0,
-    completed_builds: 0,
-  });
-  const [testimonials, setTestimonials] = useState<any[]>([]);
+  const [liveStats,     setLiveStats]     = useState({ active_users: 0, total_students: 0, total_builds: 0, completed_builds: 0 });
+  const [testimonials,  setTestimonials]  = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [platformStats, setPlatformStats] = useState<any[]>([]);
 
   useEffect(() => {
     const el = statsRef.current;
     if (!el) return;
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) setStatsVisible(true); },
-      { threshold: 0.2 }
-    );
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setStatsVisible(true); }, { threshold: 0.2 });
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [statsRes, testimonialsRes, announcementsRes, platformStatsRes] = await Promise.allSettled([
-          api.get('/public/stats'),
-          api.get('/public/testimonials'),
-          api.get('/public/announcements?limit=3'),
-          api.get('/public/platform-stats'),
-        ]);
-
-        if (statsRes.status === 'fulfilled') setLiveStats(statsRes.value.data);
-        if (testimonialsRes.status === 'fulfilled') setTestimonials(testimonialsRes.value.data || []);
-        if (announcementsRes.status === 'fulfilled') setAnnouncements(announcementsRes.value.data || []);
-        if (platformStatsRes.status === 'fulfilled') setPlatformStats(platformStatsRes.value.data || []);
-      } catch {
-        // Fail silently — static fallbacks render
-      }
-    };
-    loadData();
+    Promise.allSettled([
+      api.get('/public/stats'),
+      api.get('/public/testimonials'),
+      api.get('/public/announcements?limit=3'),
+      api.get('/public/platform-stats'),
+    ]).then(([statsRes, testimonialsRes, announcementsRes, platformStatsRes]) => {
+      if (statsRes.status === 'fulfilled')        setLiveStats(statsRes.value.data);
+      if (testimonialsRes.status === 'fulfilled')  setTestimonials(testimonialsRes.value.data || []);
+      if (announcementsRes.status === 'fulfilled') setAnnouncements(announcementsRes.value.data || []);
+      if (platformStatsRes.status === 'fulfilled') setPlatformStats(platformStatsRes.value.data || []);
+    });
   }, []);
 
-  // Build display stats from platform_stats table or live data
+  // REAL data only — no fake fallbacks
   const displayStats = platformStats.length > 0
-    ? platformStats.map(s => ({ value: parseInt(s.value) || 0, suffix: '+', label: s.label }))
+    ? platformStats.map((s: any) => ({ value: parseInt(s.value) || 0, suffix: '+', label: s.label }))
     : [
-        { value: liveStats.total_students || 50, suffix: '+', label: 'Community Members' },
-        { value: 6, suffix: '+', label: 'Ecosystem Modules' },
-        { value: liveStats.total_builds || 10, suffix: '+', label: 'Build Requests' },
-        { value: 100, suffix: '%', label: 'Execution Focused' },
+        { value: liveStats.total_students,    suffix: '+', label: 'Community Members' },
+        { value: 6,                            suffix: '+', label: 'Ecosystem Modules' },
+        { value: liveStats.total_builds,       suffix: '+', label: 'Build Requests' },
+        { value: 100,                          suffix: '%', label: 'Execution Focused' },
       ];
 
-  const displayTestimonials = testimonials.length > 0 ? testimonials : [
-    { name: 'Vera Chinecherem', role: 'Student', text: 'TechMindsVerse gave me a clear path from learning to building real products.', avatar_initial: 'V' },
-    { name: 'Kenlight', role: 'Client', text: 'The Build Studio team turned my idea into a working product in weeks.', avatar_initial: 'K' },
-    { name: 'Sheddy De Coder', role: 'Founder', text: 'Built this to bridge the gap between talent and opportunity in tech.', avatar_initial: 'S' },
-  ];
+  const displayTestimonials = testimonials.length > 0 ? testimonials : [];
+
+  // Styles that adapt to theme
+  const sectionBorder = isDark ? 'border-white/5' : 'border-gray-100';
+  const textH2  = isDark ? 'text-white' : 'text-gray-900';
+  const textSub = isDark ? 'text-white/40' : 'text-gray-500';
+  const textMuted = isDark ? 'text-white/25' : 'text-gray-400';
+  const cardBg  = isDark ? 'bg-black border-white/5 hover:border-white/15' : 'bg-white border-gray-100 hover:border-[#1A3BDB]/20 shadow-sm hover:shadow-md';
+  const tagBg   = isDark ? 'border-[#1A3BDB]/30 bg-[#1A3BDB]/5' : 'border-blue-200 bg-blue-50';
 
   return (
     <PublicLayout>
 
-      {/* ── HERO ── */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-mobile-nav">
-
-        {/* Grid */}
-        <motion.div style={{ y: yBg }} className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div
-            className="absolute inset-0 opacity-[0.025]"
-            style={{
-              backgroundImage: `linear-gradient(rgba(26,59,219,1) 1px, transparent 1px), linear-gradient(90deg, rgba(26,59,219,1) 1px, transparent 1px)`,
-              backgroundSize: '55px 55px',
-            }}
-          />
+      {/* ── HERO — always dark for visual impact, but clean ── */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-mobile-nav hero-dark section-isolated">
+        <motion.div style={{ y: yBg }} className="absolute inset-0 pointer-events-none" aria-hidden>
+          <div className="absolute inset-0 opacity-[0.025]" style={{
+            backgroundImage: `linear-gradient(rgba(26,59,219,1) 1px, transparent 1px), linear-gradient(90deg, rgba(26,59,219,1) 1px, transparent 1px)`,
+            backgroundSize: '55px 55px',
+          }} />
         </motion.div>
 
-        {/* Orbs */}
-        {ORBS.map((orb, i) => (
-          <motion.div
-            key={i}
-            className={`absolute rounded-full ${orb.color} ${orb.blur} pointer-events-none`}
-            style={{ width: orb.w, height: orb.h, top: orb.top, left: 'left' in orb ? orb.left : undefined, right: 'right' in orb ? (orb as any).right : undefined }}
-            animate={{ scale: [1, 1.07, 1], opacity: [0.5, 0.85, 0.5] }}
-            transition={{ duration: 7 + i * 2, repeat: Infinity, ease: 'easeInOut', delay: orb.delay }}
-          />
-        ))}
-
+        <div className="absolute top-1/3 left-1/5 w-[420px] h-[420px] bg-[#1A3BDB]/[0.07] rounded-full blur-[130px] pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-[320px] h-[320px] bg-purple-600/[0.05] rounded-full blur-[110px] pointer-events-none" />
         <Particles />
 
-        {/* Content */}
-        <motion.div
-          style={{ y: yText, opacity: opacityHero }}
-          className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 text-center"
-        >
-          {/* Live badge */}
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }} className="inline-flex items-center gap-2 border border-brand-blue/30 bg-brand-blue/5 px-4 py-2 mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-brand-blue pulse-dot" />
-            <span className="text-brand-blue text-xs tracking-[0.25em] uppercase">TechMindsVerse OS — Phase 1 Live</span>
+        <motion.div style={{ y: yText, opacity }} className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 text-center">
+
+          {/* Badge */}
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}
+            className="inline-flex items-center gap-2 border border-[#1A3BDB]/30 bg-[#1A3BDB]/8 px-4 py-2 mb-6"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-[#1A3BDB] pulse-dot" />
+            <span className="text-[#1A3BDB] text-xs tracking-[0.25em] uppercase">TechMindsVerse OS · Phase 1 Live</span>
           </motion.div>
 
           {/* Headline */}
@@ -266,26 +236,28 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 36 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, delay: 0.2 }}
-            className="font-bebas leading-[0.88] tracking-wide text-[clamp(2.8rem,10vw,9rem)] mb-5"
+            className="font-bebas leading-[0.9] tracking-wide text-[clamp(2.8rem,10vw,9rem)] mb-5"
           >
             <span className="block text-white">WHERE TALENT</span>
-            <span className="block">
-              <TypedText words={['LEARNS', 'BUILDS', 'SHIPS', 'GROWS', 'LEADS']} />
-            </span>
+            <span className="block"><TypedText words={['LEARNS', 'BUILDS', 'SHIPS', 'GROWS', 'LEADS']} /></span>
             <span className="block text-white">& IDEAS LAUNCH</span>
           </motion.h1>
 
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-white/50 text-base md:text-lg max-w-xl mx-auto mb-10 leading-relaxed px-2">
-            One ecosystem. One identity. Academy, Build Studio, Community — all connected.
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+            className="text-white/50 text-base md:text-lg max-w-xl mx-auto mb-10 leading-relaxed px-2"
+          >
+            One account. Academy, Build Studio, Community — all connected.
+            Learn real skills, build real products, grow in a real ecosystem.
           </motion.p>
 
           {/* CTAs */}
-          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mb-14 px-2">
-            <Link href="/register" className="group px-7 py-4 bg-brand-blue text-white font-semibold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all hover:shadow-lg hover:shadow-brand-blue/25 hover:-translate-y-0.5">
-              Join the Ecosystem
-              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
+            className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mb-14 px-2"
+          >
+            <Link href="/register" className="group px-7 py-4 bg-[#1A3BDB] text-white font-semibold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#1A3BDB]/25">
+              Join the Ecosystem Free <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link href="/academy" className="px-7 py-4 border border-white/20 text-white hover:border-brand-blue/50 hover:bg-brand-blue/5 transition-all text-center">
+            <Link href="/academy" className="px-7 py-4 border border-white/20 text-white hover:border-white/40 hover:bg-white/5 transition-all text-center">
               Explore Academy
             </Link>
             <Link href="/build" className="px-7 py-3 text-white/40 hover:text-white transition-colors text-sm text-center">
@@ -293,15 +265,15 @@ export default function HomePage() {
             </Link>
           </motion.div>
 
-          {/* Dashboard preview — desktop only */}
-          <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.85, duration: 0.7 }} className="relative max-w-3xl mx-auto hidden md:block">
-            <div className="border border-white/8 bg-black/80 backdrop-blur-sm p-1 shadow-2xl shadow-brand-blue/10">
+          {/* Mini dashboard preview — desktop only */}
+          <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.85, duration: 0.7 }}
+            className="relative max-w-3xl mx-auto hidden md:block"
+          >
+            <div className="border border-white/8 bg-black/80 p-1 shadow-2xl shadow-[#1A3BDB]/10">
               <div className="border border-white/5 bg-black p-5">
                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
                   <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 bg-brand-blue rounded-sm flex items-center justify-center">
-                      <span className="font-bebas text-white text-[10px]">T</span>
-                    </div>
+                    <img src="/logo.png" alt="" className="w-5 h-5 rounded-sm" />
                     <span className="font-bebas text-white/60 text-xs tracking-widest">TECHMINDSVERSE OS</span>
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -311,12 +283,14 @@ export default function HomePage() {
                 </div>
                 <div className="grid grid-cols-4 gap-3 mb-4">
                   {[
-                    { label: 'Students', value: `${liveStats.total_students || 50}+` },
-                    { label: 'Builds', value: `${liveStats.total_builds || 12}`, color: 'text-brand-blue' },
-                    { label: 'Completed', value: `${liveStats.completed_builds || 4}`, color: 'text-green-400' },
-                    { label: 'Active', value: '100%', color: 'text-purple-400' },
+                    { label: 'Students',  value: liveStats.total_students || '—' },
+                    { label: 'Builds',    value: liveStats.total_builds || '—',    color: 'text-[#1A3BDB]' },
+                    { label: 'Completed', value: liveStats.completed_builds || '—', color: 'text-green-400' },
+                    { label: 'Modules',   value: '6',                               color: 'text-purple-400' },
                   ].map((m, i) => (
-                    <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 + i * 0.1 }} className="border border-white/5 p-2.5 text-center">
+                    <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 + i * 0.1 }}
+                      className="border border-white/5 p-2.5 text-center"
+                    >
                       <p className="text-white/25 text-[10px] mb-1">{m.label}</p>
                       <p className={`font-bebas text-lg ${m.color || 'text-white'}`}>{m.value}</p>
                     </motion.div>
@@ -325,8 +299,10 @@ export default function HomePage() {
                 {announcements.length > 0 && (
                   <div className="space-y-2">
                     {announcements.slice(0, 2).map((a, i) => (
-                      <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.35 + i * 0.12 }} className="flex items-center gap-3 py-1.5 border-b border-white/5 last:border-0">
-                        <div className="w-1.5 h-1.5 rounded-full bg-brand-blue shrink-0" />
+                      <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.35 + i * 0.12 }}
+                        className="flex items-center gap-3 py-1.5 border-b border-white/5 last:border-0"
+                      >
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#1A3BDB] shrink-0" />
                         <span className="text-white/35 text-xs flex-1 truncate">{a.title}</span>
                       </motion.div>
                     ))}
@@ -334,43 +310,75 @@ export default function HomePage() {
                 )}
               </div>
             </div>
-            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-2/3 h-10 bg-brand-blue/12 blur-2xl" />
+            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-2/3 h-10 bg-[#1A3BDB]/12 blur-2xl" />
           </motion.div>
         </motion.div>
 
-        {/* Scroll hint */}
-        <motion.div animate={{ y: [0, 7, 0] }} transition={{ duration: 2, repeat: Infinity }} className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-white/15 pointer-events-none">
+        <motion.div animate={{ y: [0, 7, 0] }} transition={{ duration: 2, repeat: Infinity }}
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-white/15 pointer-events-none"
+        >
           <span className="text-[10px] tracking-widest uppercase">Scroll</span>
           <div className="w-px h-6 bg-gradient-to-b from-white/20 to-transparent" />
         </motion.div>
       </section>
 
-      {/* ── STATS (LIVE) ── */}
-      <section ref={statsRef} className="py-20 md:py-28 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-blue/5 via-transparent to-purple-500/5 pointer-events-none" />
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-12">
-            {displayStats.map((s, i) => {
-              const count = useCountUp(s.value, 1800, statsVisible);
-              return (
-                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="text-center">
-                  <p className="font-bebas text-5xl md:text-7xl bg-gradient-to-b from-white to-brand-blue bg-clip-text text-transparent">
-                    {statsVisible ? count : 0}{s.suffix}
-                  </p>
-                  <p className="text-white/40 text-sm mt-1 tracking-wide">{s.label}</p>
-                </motion.div>
-              );
-            })}
-          </div>
+      {/* ── WHAT IS TECHMINDSVERSE — light section ── */}
+      <section className={`py-16 md:py-20 px-4 sm:px-6 border-b ${sectionBorder} pub-section`}>
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <span className={`text-[#1A3BDB] text-xs tracking-[0.3em] uppercase border px-4 py-1.5 inline-block mb-5 ${tagBg}`}>
+              What We Are
+            </span>
+            <h2 className={`font-bebas text-[clamp(2rem,5vw,4rem)] leading-tight mb-5 ${textH2}`}>
+              ONE ECOSYSTEM.<br />
+              <span className="text-[#1A3BDB]">INFINITE POSSIBILITIES.</span>
+            </h2>
+            <p className={`text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-8 ${textSub}`}>
+              TechMindsVerse is a unified tech platform where you create <strong className="text-[#1A3BDB]">one account</strong> and
+              unlock access to an academy, a product build studio, and a growing community of builders.
+              We bridge the gap between learning and doing — every course builds a real product,
+              every builder gets real support.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
+              {[
+                { label: 'Learn with purpose', icon: BookOpen },
+                { label: 'Build real products', icon: Package },
+                { label: 'Grow in community', icon: Users },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-[#1A3BDB]/10 flex items-center justify-center">
+                    <item.icon size={15} className="text-[#1A3BDB]" />
+                  </div>
+                  <span className={`text-sm font-medium ${isDark ? 'text-white/70' : 'text-gray-600'}`}>{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </section>
 
+      {/* ── STATS ── */}
+<section ref={statsRef} className="py-20 md:py-28 relative overflow-hidden pub-section-alt">
+  <div className="max-w-5xl mx-auto px-4 sm:px-6">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
+      {displayStats.map((s, i) => (
+        <CountUp
+          key={i}
+          target={s.value}
+          suffix={s.suffix}
+          label={s.label}
+          start={statsVisible}
+        />
+      ))}
+    </div>
+  </div>
+</section>
       {/* ── TECH MARQUEE ── */}
-      <section className="py-6 border-y border-white/5 overflow-hidden">
+      <section className={`py-5 border-b ${sectionBorder} overflow-hidden pub-section`}>
         <div className="flex gap-10 marquee-track">
           {[...TECH, ...TECH].map((tech, i) => (
-            <span key={i} className="text-white/20 text-sm font-medium whitespace-nowrap flex items-center gap-2.5">
-              <span className="w-1 h-1 rounded-full bg-brand-blue/50 shrink-0" />
+            <span key={i} className={`text-sm font-medium whitespace-nowrap flex items-center gap-2.5 ${isDark ? 'text-white/20' : 'text-gray-400'}`}>
+              <span className="w-1 h-1 rounded-full bg-[#1A3BDB]/50 shrink-0" />
               {tech}
             </span>
           ))}
@@ -378,15 +386,19 @@ export default function HomePage() {
       </section>
 
       {/* ── ECOSYSTEM MODULES ── */}
-      <section className="py-24 md:py-32 px-4 sm:px-6">
+      <section className={`py-20 md:py-28 px-4 sm:px-6 border-b ${sectionBorder} pub-section`}>
         <div className="max-w-6xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12 md:mb-16">
-            <span className="text-brand-blue text-xs tracking-[0.3em] uppercase border border-brand-blue/30 px-4 py-1.5 inline-block mb-4">Ecosystem</span>
-            <h2 className="font-bebas text-[clamp(2rem,6vw,5rem)] text-white leading-none">
-              ONE PLATFORM.<br /><span className="text-brand-blue">MULTIPLE SYSTEMS.</span>
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
+            <span className={`text-[#1A3BDB] text-xs tracking-[0.3em] uppercase border px-4 py-1.5 inline-block mb-4 ${tagBg}`}>
+              Ecosystem
+            </span>
+            <h2 className={`font-bebas text-[clamp(2rem,6vw,5rem)] leading-none mb-4 ${textH2}`}>
+              ONE PLATFORM.<br />
+              <span className="text-[#1A3BDB]">MULTIPLE SYSTEMS.</span>
             </h2>
-            <p className="text-white/40 max-w-lg mx-auto mt-4 text-sm md:text-base leading-relaxed">
-              One account unlocks academy, build studio, community, and future AI systems.
+            <p className={`max-w-lg mx-auto text-sm md:text-base leading-relaxed ${textSub}`}>
+              One account unlocks the academy, build studio, community, and future AI systems.
+              Your journey grows as you do.
             </p>
           </motion.div>
           <div className="grid md:grid-cols-3 gap-5">
@@ -397,27 +409,26 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.12 }}
-                whileHover={{ y: -6 }}
-                className="group relative border border-white/5 bg-black overflow-hidden hover:border-brand-blue/30 transition-all duration-300"
+                className={`group relative border overflow-hidden transition-all duration-300 pub-card`}
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${mod.gradient} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-                <div className="relative p-6 md:p-8">
+                <div className="relative p-6 md:p-7">
                   <div className="flex items-center justify-between mb-5">
-                    <span className="text-brand-blue text-xs tracking-[0.25em] border border-brand-blue/30 px-2 py-0.5">{mod.tag}</span>
-                    <ChevronRight size={13} className="text-white/15 group-hover:text-brand-blue group-hover:translate-x-1 transition-all" />
+                    <span className={`text-[#1A3BDB] text-xs tracking-[0.25em] border px-2 py-0.5 ${tagBg}`}>{mod.tag}</span>
+                    <ChevronRight size={13} className={`${isDark ? 'text-white/15' : 'text-gray-300'} group-hover:text-[#1A3BDB] group-hover:translate-x-1 transition-all`} />
                   </div>
-                  <mod.icon size={26} className="text-brand-blue mb-4" />
-                  <h3 className="font-bebas text-2xl md:text-3xl text-white mb-2">{mod.title}</h3>
-                  <p className="text-white/40 text-sm leading-relaxed mb-5">{mod.description}</p>
-                  <div className="space-y-1.5 mb-6">
+                  <mod.icon size={26} className="text-[#1A3BDB] mb-4" />
+                  <h3 className={`font-bebas text-2xl mb-2 ${textH2}`}>{mod.title}</h3>
+                  <p className={`text-sm leading-relaxed mb-5 ${textSub}`}>{mod.description}</p>
+                  <div className="space-y-1.5 mb-5">
                     {mod.features.map((f, j) => (
-                      <div key={j} className="flex items-center gap-2 text-white/30 text-xs">
-                        <div className="w-1 h-1 rounded-full bg-brand-blue/60 shrink-0" />
+                      <div key={j} className={`flex items-center gap-2 text-xs ${isDark ? 'text-white/30' : 'text-gray-400'}`}>
+                        <div className="w-1 h-1 rounded-full bg-[#1A3BDB]/60 shrink-0" />
                         {f}
                       </div>
                     ))}
                   </div>
-                  <Link href={mod.href} className="text-brand-blue text-sm flex items-center gap-1.5 group-hover:gap-2 transition-all">
+                  <Link href={mod.href} className="text-[#1A3BDB] text-sm flex items-center gap-1.5 group-hover:gap-2.5 transition-all font-medium">
                     Explore {mod.title} <ArrowRight size={13} />
                   </Link>
                 </div>
@@ -427,28 +438,30 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── ANNOUNCEMENTS (LIVE) ── */}
+      {/* ── ANNOUNCEMENTS — only if real data exists ── */}
       {announcements.length > 0 && (
-        <section className="py-16 px-4 sm:px-6 border-t border-white/5">
+        <section className={`py-16 px-4 sm:px-6 border-b ${sectionBorder} pub-section-alt`}>
           <div className="max-w-5xl mx-auto">
-            <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="flex items-center justify-between mb-8">
+            <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              className="flex items-center justify-between mb-8 flex-wrap gap-4"
+            >
               <div>
-                <span className="text-brand-blue text-xs tracking-[0.3em] uppercase border border-brand-blue/30 px-4 py-1.5 inline-block mb-3">Updates</span>
-                <h2 className="font-bebas text-3xl md:text-4xl text-white">ECOSYSTEM UPDATES</h2>
+                <span className={`text-[#1A3BDB] text-xs tracking-[0.3em] uppercase border px-4 py-1.5 inline-block mb-3 ${tagBg}`}>Updates</span>
+                <h2 className={`font-bebas text-3xl md:text-4xl ${textH2}`}>ECOSYSTEM UPDATES</h2>
               </div>
-              <Link href="/community" className="text-brand-blue text-sm hover:underline hidden md:block">
-                View all →
-              </Link>
+              <Link href="/community" className="text-[#1A3BDB] text-sm font-medium hover:underline">View all →</Link>
             </motion.div>
             <div className="grid md:grid-cols-3 gap-4">
               {announcements.map((a, i) => (
-                <motion.div key={a.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className={`border p-5 ${a.pinned ? 'border-brand-blue/25 bg-brand-blue/5' : 'border-white/5 hover:border-white/10'} transition-colors`}>
+                <motion.div key={a.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                  className={`pub-card border p-5 ${a.pinned ? 'border-[#1A3BDB]/20 bg-[#1A3BDB]/4' : ''}`}
+                >
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-xs text-brand-blue border border-brand-blue/25 px-2 py-0.5 capitalize">{a.type}</span>
-                    {a.pinned && <span className="text-xs text-white/20">Pinned</span>}
+                    <span className={`text-xs text-[#1A3BDB] border px-2 py-0.5 capitalize ${tagBg}`}>{a.type}</span>
+                    {a.pinned && <span className={`text-xs ${isDark ? 'text-white/20' : 'text-gray-400'}`}>Pinned</span>}
                   </div>
-                  <h3 className="text-white font-medium text-sm mb-2 leading-snug">{a.title}</h3>
-                  <p className="text-white/40 text-xs leading-relaxed line-clamp-3">{a.content}</p>
+                  <h3 className={`font-medium text-sm mb-2 leading-snug ${textH2}`}>{a.title}</h3>
+                  <p className={`text-xs leading-relaxed line-clamp-3 ${textSub}`}>{a.content}</p>
                 </motion.div>
               ))}
             </div>
@@ -457,31 +470,38 @@ export default function HomePage() {
       )}
 
       {/* ── HOW IT WORKS ── */}
-      <section className="py-24 px-4 sm:px-6 border-t border-white/5">
+      <section className={`py-20 md:py-28 px-4 sm:px-6 border-b ${sectionBorder} pub-section`}>
         <div className="max-w-4xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12 md:mb-16">
-            <span className="text-brand-blue text-xs tracking-[0.3em] uppercase border border-brand-blue/30 px-4 py-1.5 inline-block mb-4">How it works</span>
-            <h2 className="font-bebas text-[clamp(2rem,6vw,4.5rem)] text-white">
-              FROM ZERO TO<br /><span className="text-brand-blue">ECOSYSTEM BUILDER</span>
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
+            <span className={`text-[#1A3BDB] text-xs tracking-[0.3em] uppercase border px-4 py-1.5 inline-block mb-4 ${tagBg}`}>How it works</span>
+            <h2 className={`font-bebas text-[clamp(2rem,6vw,4.5rem)] leading-none ${textH2}`}>
+              FROM ZERO TO<br /><span className="text-[#1A3BDB]">ECOSYSTEM BUILDER</span>
             </h2>
           </motion.div>
           <div className="space-y-0">
             {HOW_IT_WORKS.map((item, i) => (
-              <motion.div key={i} initial={{ opacity: 0, x: -16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className="flex gap-5 md:gap-7 items-start group">
+              <motion.div key={i} initial={{ opacity: 0, x: -16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}
+                className="flex gap-5 md:gap-7 items-start group"
+              >
                 <div className="shrink-0 flex flex-col items-center">
-                  <div className="w-10 h-10 md:w-12 md:h-12 border border-brand-blue/30 bg-brand-blue/8 flex items-center justify-center group-hover:bg-brand-blue/18 transition-colors">
-                    <item.icon size={16} className="text-brand-blue" />
+                  <div className={`w-10 h-10 md:w-12 md:h-12 border flex items-center justify-center transition-colors
+                    ${isDark
+                      ? 'border-[#1A3BDB]/30 bg-[#1A3BDB]/8 group-hover:bg-[#1A3BDB]/18'
+                      : 'border-blue-200 bg-blue-50 group-hover:bg-blue-100'
+                    }`}
+                  >
+                    <item.icon size={16} className="text-[#1A3BDB]" />
                   </div>
                   {i < HOW_IT_WORKS.length - 1 && (
-                    <div className="w-px flex-1 bg-gradient-to-b from-brand-blue/20 to-transparent min-h-[28px] my-1" />
+                    <div className={`w-px flex-1 bg-gradient-to-b min-h-[28px] my-1 ${isDark ? 'from-[#1A3BDB]/20 to-transparent' : 'from-blue-200 to-transparent'}`} />
                   )}
                 </div>
                 <div className="flex-1 pb-6">
                   <div className="flex items-center gap-2.5 mb-1.5">
-                    <span className="font-bebas text-brand-blue/35 text-base">{item.step}</span>
-                    <h3 className="font-bebas text-lg md:text-xl text-white">{item.title}</h3>
+                    <span className="font-bebas text-[#1A3BDB]/40 text-base">{item.step}</span>
+                    <h3 className={`font-bebas text-lg md:text-xl ${textH2}`}>{item.title}</h3>
                   </div>
-                  <p className="text-white/40 text-sm leading-relaxed">{item.desc}</p>
+                  <p className={`text-sm leading-relaxed ${textSub}`}>{item.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -489,60 +509,70 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS (LIVE) ── */}
-      <section className="py-24 px-4 sm:px-6 border-t border-white/5">
-        <div className="max-w-5xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
-            <h2 className="font-bebas text-[clamp(2rem,5vw,4rem)] text-white">
-              VOICES FROM THE<br /><span className="text-brand-blue">ECOSYSTEM</span>
-            </h2>
-          </motion.div>
-          <div className="grid md:grid-cols-3 gap-5">
-            {displayTestimonials.map((t: any, i: number) => (
-              <motion.div key={t.id || i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="border border-white/5 p-6 hover:border-white/10 transition-colors">
-                <div className="flex gap-0.5 mb-4">
-                  {[...Array(5)].map((_, j) => <Star key={j} size={11} className="text-brand-blue fill-brand-blue" />)}
-                </div>
-                <p className="text-white/50 text-sm leading-relaxed mb-5">"{t.text}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-brand-blue/15 border border-brand-blue/25 rounded-full flex items-center justify-center">
-                    <span className="font-bebas text-brand-blue text-sm">{t.avatar_initial || t.name?.[0] || '?'}</span>
+      {/* ── TESTIMONIALS — only if real data exists ── */}
+      {displayTestimonials.length > 0 && (
+        <section className={`py-24 px-4 sm:px-6 border-b ${sectionBorder} pub-section-alt`}>
+          <div className="max-w-5xl mx-auto">
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-10">
+              <h2 className={`font-bebas text-[clamp(2rem,5vw,4rem)] ${textH2}`}>
+                VOICES FROM THE<br /><span className="text-[#1A3BDB]">ECOSYSTEM</span>
+              </h2>
+            </motion.div>
+            <div className="grid md:grid-cols-3 gap-5">
+              {displayTestimonials.map((t: any, i: number) => (
+                <motion.div key={t.id || i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                  className="pub-card border p-6"
+                >
+                  <div className="flex gap-0.5 mb-4">
+                    {[...Array(5)].map((_, j) => <Star key={j} size={11} className="text-[#1A3BDB] fill-[#1A3BDB]" />)}
                   </div>
-                  <div>
-                    <p className="text-white text-sm font-medium">{t.name}</p>
-                    <p className="text-white/30 text-xs">{t.role}</p>
+                  <p className={`text-sm leading-relaxed mb-5 ${textSub}`}>"{t.text}"</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-[#1A3BDB]/15 border border-[#1A3BDB]/25 rounded-full flex items-center justify-center">
+                      <span className="font-bebas text-[#1A3BDB] text-sm">{t.avatar_initial || t.name?.[0] || '?'}</span>
+                    </div>
+                    <div>
+                      <p className={`text-sm font-medium ${textH2}`}>{t.name}</p>
+                      <p className={`text-xs ${textMuted}`}>{t.role}</p>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── CTA ── */}
-      <section className="py-24 md:py-32 px-4 sm:px-6 relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-blue/8 via-transparent to-purple-500/8" />
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand-blue/40 to-transparent" />
-          <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand-blue/40 to-transparent" />
+      <section className={`py-20 md:py-28 px-4 sm:px-6 pub-section relative overflow-hidden`}>
+        <div className="absolute inset-0 pointer-events-none">
+          <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-[#1A3BDB]/8 via-transparent to-purple-500/8' : 'bg-gradient-to-br from-blue-50 via-white to-purple-50'}`} />
+          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#1A3BDB]/30 to-transparent" />
+          <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#1A3BDB]/30 to-transparent" />
         </div>
-        <motion.div initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-2xl mx-auto text-center relative z-10">
-          <span className="font-bebas text-brand-blue text-xs tracking-[0.4em] block mb-4">START NOW</span>
-          <h2 className="font-bebas text-[clamp(2.5rem,8vw,6rem)] leading-none text-white mb-5">
-            READY TO BUILD<br /><span className="text-brand-blue">SOMETHING REAL?</span>
+        <motion.div initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          className="max-w-2xl mx-auto text-center relative z-10"
+        >
+          <span className="font-bebas text-[#1A3BDB] text-xs tracking-[0.4em] block mb-4">START NOW</span>
+          <h2 className={`font-bebas text-[clamp(2.5rem,8vw,6rem)] leading-none mb-5 ${textH2}`}>
+            READY TO BUILD<br /><span className="text-[#1A3BDB]">SOMETHING REAL?</span>
           </h2>
-          <p className="text-white/40 leading-relaxed mb-10 text-sm md:text-base">
-            Create your free account. Join the ecosystem. Start building today.
+          <p className={`leading-relaxed mb-10 text-sm md:text-base ${textSub}`}>
+            Create your free account today. Join the ecosystem. Start building.
           </p>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
-            <Link href="/register" className="group px-8 py-4 bg-brand-blue text-white font-semibold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all hover:shadow-xl hover:shadow-brand-blue/20 hover:-translate-y-0.5">
+            <Link href="/register" className="group px-8 py-4 bg-[#1A3BDB] text-white font-semibold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[#1A3BDB]/20">
               Create Free Account <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link href="/about" className="px-8 py-4 border border-white/20 text-white hover:border-white/40 transition-all text-center">
+            <Link href="/about" className={`px-8 py-4 border font-medium text-center transition-all
+              ${isDark ? 'border-white/20 text-white hover:border-white/40' : 'border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'}`}
+            >
               Learn More
             </Link>
           </div>
-          <p className="text-white/15 text-xs mt-5">No credit card · Free to join · Instant access</p>
+          <p className={`text-xs mt-5 ${isDark ? 'text-white/15' : 'text-gray-400'}`}>
+            No credit card required · Free to join · Instant access
+          </p>
         </motion.div>
       </section>
 
