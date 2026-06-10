@@ -190,19 +190,18 @@ export class AdminService {
   // STUDENTS
   // ─────────────────────────────────────────
   async getAllStudents(page = 1, limit = 20) {
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
 
-    const { data, error, count } = await this.supabaseService.clientRef
-      .from('students')
-      .select('*, users(email, status, role)', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range(from, to);
+  const { data, error, count } = await this.supabaseService.clientRef
+    .from('students')
+    .select('*, users(id, email, status, role)', { count: 'exact' })  // ← ADD id
+    .order('created_at', { ascending: false })
+    .range(from, to);
 
-    if (error) throw new NotFoundException('Failed to fetch students');
-    return { data, total: count, page, limit };
-  }
-
+  if (error) throw new NotFoundException('Failed to fetch students');
+  return { data, total: count, page, limit };
+}
   // ─────────────────────────────────────────
   // PROJECTS
   // ─────────────────────────────────────────

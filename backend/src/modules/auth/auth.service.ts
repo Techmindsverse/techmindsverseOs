@@ -86,6 +86,9 @@ export class AuthService {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
+    let newUser: any = existing;
+    let error: any = null;
+
     if (existing) {
       // Update existing pending account — resend OTP
       await this.supabaseService.clientRef
@@ -102,27 +105,62 @@ export class AuthService {
       await this.supabaseService.clientRef
         .from('user_activities')
         .insert({ user_id: existing.id, action: 'OTP_SENT' });
-    } else {
-      // Create new user
-      const { data: newUser, error } = await this.supabaseService.clientRef
-        .from('users')
-        .insert({
-          email,
-          password_hash,
-          username: dto.username?.toLowerCase().trim() || null,
-          role: dto.role || 'student',
-          roles: [dto.role || 'student'],
-          status: 'pending',
-          otp_code: otp,
-          otp_expires_at: otpExpiry,
-          otp_verified: false,
-          otp_attempts: 0,
-          avatar_url: dto.avatar_url || null,
-        })
+
+      // Ensure student/client profile exists for pending accounts
+      const { data: existingStudent } = await this.supabaseService.clientRef
+        .from('students')
         .select('id')
+        .eq('user_id', existing.id)
         .single();
 
-      if (error || !newUser) {
+      if (!existingStudent && dto.role === 'student') {
+        await this.supabaseService.clientRef.from('students').insert({
+          user_id: existing.id,
+          full_name: dto.fullName,
+          phone: dto.phone || null,
+          avatar_url: dto.avatar_url || null,
+        });
+      }
+
+      const { data: existingClient } = await this.supabaseService.clientRef
+        .from('clients')
+        .select('id')
+        .eq('user_id', existing.id)
+        .single();
+
+      if (!existingClient && dto.role === 'client') {
+        await this.supabaseService.clientRef.from('clients').insert({
+          user_id: existing.id,
+          full_name: dto.fullName,
+          phone: dto.phone || null,
+          avatar_url: dto.avatar_url || null,
+        });
+      }
+    } else {
+      const { data: insertedUser, error: insertError } =
+        await this.supabaseService.clientRef
+          .from('users')
+          .insert({
+            email,
+            password_hash,
+            username: dto.username?.toLowerCase().trim() || null,
+            full_name: dto.fullName,
+            role: dto.role || 'student',
+            phone: dto.phone || null,
+            avatar_url: dto.avatar_url || null,
+            otp_code: otp,
+            otp_expires_at: otpExpiry,
+            otp_attempts: 0,
+            status: 'pending',
+          })
+          .select('id')
+          .single();
+
+      newUser = insertedUser;
+      error = insertError;
+    }
+
+    if (error || !newUser) {
         throw new BadRequestException(
           'Failed to create account. Please try again.',
         );
@@ -154,7 +192,6 @@ export class AuthService {
         newUser.id,
         (dto.role || 'student') as any,
       );
-    }
 
     await this.mailService.sendOtpEmail(email, otp, dto.fullName);
 

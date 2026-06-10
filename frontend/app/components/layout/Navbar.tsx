@@ -81,10 +81,10 @@ export default function Navbar() {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-            <img
-              src="/logo.png"
-              alt="TechMindsVerse"
-              className="w-9 h-9 rounded-md transition-transform duration-300 group-hover:scale-105"
+           <img
+            src="/logo.png"
+            alt="TechMindsVerse"
+            className="h-9 w-auto rounded-sm transition-transform duration-300 group-hover:scale-105"
             />
             <span className={`font-bebas text-lg tracking-widest hidden sm:block transition-colors ${logoText} group-hover:text-[#1A3BDB]`}>
               TECHMINDSVERSE
